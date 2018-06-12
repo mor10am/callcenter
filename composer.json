@@ -1,0 +1,27 @@
+{
+    "name": "mor10am/callcenter",
+    "description": "Example callcenter for Asterisk and PHP",
+    "type": "project",
+    "require": {
+        "monolog/monolog": "^1.23",
+        "cboden/ratchet": "^0.4.1",
+        "marcelog/pami": "^2.0"
+    },
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Morten Amundsen",
+            "email": "mor10am@gmail.com"
+        }
+    ],
+    "config": {
+      "platform": {
+        "php": "7.0.30"
+      }
+    },
+    "autoload": {
+        "psr-0": {
+            "Callcenter\\": "src/"
+        }
+    }
+}

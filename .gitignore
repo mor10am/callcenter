@@ -1,0 +1,4 @@
+vendor
+log/*.log
+.idea
+ansible/*.retry

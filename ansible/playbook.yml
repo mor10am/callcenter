@@ -1,0 +1,40 @@
+---
+- hosts: asterisk
+  remote_user: deploy
+  become: yes
+
+  tasks:
+  - name: install packages
+    apt: name={{ item }} update_cache=yes state=latest cache_valid_time=86400
+    with_items:
+        - php-cli
+        - php-common
+        - php-json
+        - php-mbstring
+        - php-bcmath
+        - php-intl
+        - php-dev
+        - php-pear
+
+  - name: create project folder
+    file:
+      path: /opt/callcenter
+      state: directory
+      mode: 0755
+
+  #- name: empty asterisk etc folder
+  #  file:
+  #    path: /etc/asterisk
+  #    state: absent
+
+  - name: copy asterisk etc folder to project
+    copy:
+      src: asterisk/etc/
+      dest: /etc/asterisk/
+    notify:
+      - reload asterisk
+
+
+  handlers:
+    - name: reload asterisk
+      shell: asterisk -rx'core reload'

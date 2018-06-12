@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+
+    <title>Callcenter Dashboard</title>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm">
+            <h3>Incoming calls</h3>
+            <div id="callers"></div>
+        </div>
+        <div class="col-sm">
+            <h3>Agents</h3>
+            <div id="agents"></div>
+        </div>
+        <div class="col-sm">
+            <h3>Connected calls</h3>
+            <div id="connected"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+
+<script>
+    var conn = new WebSocket('ws://127.0.0.1:8080/callcenter');
+
+    conn.onmessage = function(e) {
+        console.log(e.data);
+
+        let lines = e.data.split("\n");
+
+        lines.forEach(function (val, index) {
+            updateUI(val);
+        })
+    };
+
+    conn.onopen = function (e) {
+        conn.send('HELLO');
+    };
+
+
+    function changeStatus(agentid)
+    {
+        let str = 'TOGGLE:'+agentid;
+        console.log(str);
+        conn.send(str);
+    }
+
+    function goAvail(agentid)
+    {
+        let str = 'AVAIL:'+agentid;
+        console.log(str);
+        conn.send(str);
+    }
+
+    function updateUI(msg)
+    {
+        let parts = msg.split(":");
+        let event = parts[0];
+
+        switch (event) {
+            case 'AGENT':
+                handleAgentUI(event, parts[1]);
+                break;
+            case 'CALLER':
+            case 'CALLERHANGUP':
+            case 'CALLERJOIN':
+                handleCallerUI(event, parts[1]);
+                break;
+            case 'CONNECT':
+                handleConnectUI(event, parts[1], parts[2]);
+                break;
+            default:
+                break;
+        }
+    }
+
+    function handleConnectUI(event, agentinfo, callinfo)
+    {
+        let agentparts = agentinfo.split("|");
+        let callparts = callinfo.split("|");
+
+        let agent = agentparts[0];
+        let caller = callparts[0];
+
+        let id = "connect-"+callparts[2];
+
+        let connection = $(id);
+
+        let agentclass = "connectedagent-"+agent;
+
+        if (!connection.length) {
+            $('#connected').append(
+                "<div class='alert alert-secondary' id='"+id+"'>Agent "+agent + " connected to call " + caller +"</div>"
+            );
+        }
+    }
+
+    function handleCallerUI(event, callerinfo)
+    {
+        let parts = callerinfo.split("|");
+        let callerid = parts[0];
+        let status = parts[1];
+        let hash = parts[2];
+
+        if (event == 'CALLER') {
+            $('#callers').append("<div class='alert alert-light' id='call-"+hash+"'>Call from "+callerid+" <span class='queue badge badge-light'></span></div>");
+        } else if (event == 'CALLERHANGUP') {
+            $('#call-'+hash).remove();
+            $('#connect-'+hash).remove();
+        } else if (event == 'CALLERJOIN') {
+            let call = $('#call-'+hash);
+
+            if (call.length) {
+                call.removeClass('alert-light').addClass('alert-primary');
+                $('.queue', call).html(parts[3]);
+            }
+        }
+    }
+
+    function handleAgentUI(event, agentinfo)
+    {
+        let parts = agentinfo.split("|");
+
+        let agentid = parts[0];
+        let status = parts[1];
+
+        let agdom = $('#agent-' + agentid);
+
+        let agentsdom = $('#agents');
+
+        if (!agdom.length && status != 'LOGGEDOUT') {
+            agentsdom.append("<div class='alert alert-warning' id='agent-"+agentid+"'></div>");
+            agdom = $('#agent-' + agentid);
+        }
+
+        switch (status) {
+            case 'LOGGEDOUT':
+                if (agdom.length) {
+                    agdom.remove();
+                }
+                break;
+            case 'LOGGEDIN':
+                agdom.html(agentid + "  " + status + " <button class='btn btn-sm' onClick='javascript:goAvail(" + agentid + ")'>Go Avail</button>");
+                agdom.removeClass('alert-success').addClass('alert-warning');
+                break;
+            case 'PAUSED':
+                agdom.html(agentid + "  " + status + " <button class='btn btn-sm' onClick='javascript:changeStatus(" + agentid + ")'>Change</button>");
+                agdom.removeClass('alert-success').addClass('alert-warning');
+                break;
+            case 'AVAIL':
+                agdom.html(agentid + "  " + status + " <button class='btn btn-sm' onClick='javascript:changeStatus(" + agentid + ")'>Change</button>");
+                agdom.removeClass('alert-warning').addClass('alert-success');
+
+                conag = $('#connectedagent-'+agentid);
+
+                if (conag.length) {
+                    conag.remove();
+                }
+                break;
+            default:
+                agdom.html(agentid + "  " + status);
+                agdom.removeClass('alert-success').addClass('alert-warning');
+                break;
+        }
+    }
+
+
+</script>
+
+</body>
+</html>
