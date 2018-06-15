@@ -42,10 +42,15 @@ $asteriskmanager = new Callcenter\AsteriskManager(
 
 $asteriskmanager->setLogger($logger);
 
+$settings = [
+    'report' => __DIR__."/report.csv",
+];
+
 $callcenter = new Callcenter\Callcenter(
     $websockethandler,
     $asteriskmanager,
-    $logger
+    $logger,
+    $settings
 );
 
 

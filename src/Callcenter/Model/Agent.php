@@ -6,6 +6,7 @@ class Agent
 {
     public $agentid;
     public $status = "NA";
+    public $queue;
     public $time;
 
     /**
@@ -19,6 +20,43 @@ class Agent
     }
 
     /**
+     * @return string
+     */
+    public function getStatus() : string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDuration() : int
+    {
+        return time() - $this->time;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAgentId() : string
+    {
+        return $this->agentid;
+    }
+
+    /**
+     * @return string
+     */
+    public function getQueue() : string
+    {
+        return $this->queue;
+    }
+
+    public function setQueue($queue)
+    {
+        $this->queue = $queue;
+    }
+
+    /**
      * @param string $status
      */
     public function setStatus(string $status)
@@ -29,8 +67,14 @@ class Agent
             return;
         }
 
+        if ($status != 'INCALL') {
+            $this->queue = "";
+        }
+
         $this->status = $status;
         $this->time = time();
+
+        return true;
     }
 
     /**
@@ -39,5 +83,12 @@ class Agent
     public function __toString()
     {
         return "{$this->agentid}|{$this->status}";
+    }
+
+    public function getReportLine()
+    {
+        $duration = time() - $this->time;
+
+        return date('Y-m-d H:i:s').";AGENT;{$this->agentid};{$this->status};$duration;{$this->queue}";
     }
 }

@@ -22,6 +22,11 @@ class Callcenter
     /* @var LoggerInterface $logger */
     private $logger;
 
+    /* @var array $settings */
+    private $settings = [
+        'report' => false
+    ];
+
     /* @var array $agents */
     private $agents = [];
 
@@ -40,12 +45,14 @@ class Callcenter
     public function __construct(
         \Callcenter\WebsocketHandler $websocket,
         \Callcenter\AsteriskManager $ami,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        array $settings = []
     )
     {
         $this->websocket = $websocket;
         $this->ami = $ami;
         $this->logger = $logger;
+        $this->settings = array_merge($this->settings, $settings);
     }
 
     /**
@@ -101,7 +108,8 @@ class Callcenter
     }
 
     /**
-     * @param EventMessage $ev
+     * @param string $callerid
+     * @param string $uid
      * @return Caller
      */
     public function getOrCreateCaller(string $callerid, string $uid) : Caller
@@ -129,6 +137,9 @@ class Callcenter
         $this->setAgentStatus($agent, 'AVAIL');
     }
 
+    /**
+     * @param $agentid
+     */
     public function agentLoggedIn($agentid)
     {
         $this->setAgentStatus(
@@ -137,6 +148,9 @@ class Callcenter
         );
     }
 
+    /**
+     * @param $agentid
+     */
     public function agentLoggedOut($agentid)
     {
         $this->setAgentStatus(
@@ -145,6 +159,9 @@ class Callcenter
         );
     }
 
+    /**
+     * @param $agentid
+     */
     public function agentPaused($agentid)
     {
         $this->setAgentStatus(
@@ -153,6 +170,9 @@ class Callcenter
         );
     }
 
+    /**
+     * @param $agentid
+     */
     public function agentAvail($agentid)
     {
         $this->setAgentStatus(
@@ -175,13 +195,14 @@ class Callcenter
     }
 
     /**
-     * @param EventMessage $ev
+     * @param string $callerid
+     * @param string $uid
      */
     public function callerHangup(string $callerid, string $uid)
     {
         $caller = $this->getOrCreateCaller($callerid, $uid);
 
-        $caller->setStatus('HANGUP');
+        $this->setCallerStatus($caller, 'HANGUP');
 
         unset($this->callers[$caller->uid]);
 
@@ -207,6 +228,7 @@ class Callcenter
         $caller = $this->getOrCreateCaller($callerid, $uid);
 
         $caller->setQueue($queue);
+        $this->setCallerStatus($caller, 'QUEUED');
 
         $this->websocket->sendtoAll("CALLERJOIN:{$caller}|{$caller->queue}");
 
@@ -228,8 +250,9 @@ class Callcenter
         $caller = $this->callers[$uid];
 
         if (!isset($this->bridges[$uid])) {
+            $agent->setQueue($caller->getQueue());
             $this->setAgentStatus($agent, 'INCALL');
-            $caller->status = 'INCALL';
+            $this->setCallerStatus($caller, 'INCALL');
 
             $this->bridges[$uid] = new Bridge($caller, $agent);
             $this->websocket->sendtoAll("CONNECT:{$agent}:{$caller}");
@@ -239,12 +262,37 @@ class Callcenter
     }
 
     /**
+     * @param Caller $caller
+     * @param $status
+     */
+    private function setCallerStatus(Caller $caller, $status)
+    {
+        $report = $caller->getReportLine();
+
+        if ($caller->setStatus($status)) {
+            file_put_contents(
+                $this->settings['report'],
+                $report."\n",
+                FILE_APPEND
+            );
+        }
+    }
+
+    /**
      * @param Agent $agent
      * @param $status
      */
     private function setAgentStatus(Agent $agent, $status)
     {
-        $agent->setStatus($status);
+        $report = $agent->getReportLine();
+
+        if ($agent->setStatus($status)) {
+            file_put_contents(
+                $this->settings['report'],
+                $report."\n",
+                FILE_APPEND
+            );
+        }
 
         $this->websocket->sendtoAll("AGENT:{$agent}");
 

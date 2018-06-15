@@ -2,3 +2,5 @@ vendor
 log/*.log
 .idea
 ansible/*.retry
+report.csv
+

@@ -35,12 +35,44 @@ class Caller
     }
 
     /**
+     * @return string
+     */
+    public function getStatus() : string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @return string
+     */
+    public function getQueue() : string
+    {
+        return $this->queue;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDuration() : int
+    {
+        return time() - $this->time;
+    }
+
+    /**
      * @param string $status
      */
     public function setStatus(string $status)
     {
+        $status = strtoupper($status);
+
+        if ($this->status == $status) {
+            return;
+        }
+
         $this->status = $status;
         $this->time = time();
+
+        return true;
     }
 
     /**
@@ -49,5 +81,12 @@ class Caller
     public function __toString()
     {
         return (($this->callerid)?:"anonymous")."|{$this->status}|{$this->hash}";
+    }
+
+    public function getReportLine()
+    {
+        $duration = time() - $this->time;
+
+        return date('Y-m-d H:i:s').";CALLER;{$this->callerid};{$this->status};$duration;{$this->queue}";
     }
 }
