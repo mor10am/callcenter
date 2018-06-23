@@ -106,7 +106,11 @@ class Caller
      */
     public function __toString() : string
     {
-        return (($this->callerid)?:"anonymous")."|{$this->status}|{$this->hash}";
+        $str = (($this->callerid)?:"anonymous")."|{$this->status}|{$this->hash}";
+        if ($this->queue) {
+            $str .= "|{$this->queue}";
+        }
+        return $str;
     }
 
     /**
