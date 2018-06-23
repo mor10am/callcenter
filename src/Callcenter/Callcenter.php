@@ -5,11 +5,8 @@ namespace Callcenter;
 
 use Callcenter\Model\Agent;
 use Callcenter\Model\Caller;
-use Callcenter\Model\Bridge;
-
+use Callcenter\Model\Connection;
 use Psr\Log\LoggerInterface;
-use PAMI\Message\Event\EventMessage;
-
 use Ratchet\ConnectionInterface;
 
 class Callcenter
@@ -47,9 +44,10 @@ class Callcenter
     private $callers = [];
 
     /**
+     * Connections of agent and call
      * @var array
      */
-    private $bridges = [];
+    private $connections = [];
 
     /**
      * Callcenter constructor.
@@ -79,6 +77,14 @@ class Callcenter
 
         foreach ($this->agents as $agent) {
             $str .= "AGENT:{$agent}\n";
+        }
+
+        foreach ($this->callers as $caller) {
+            $str .= "CALLER:{$caller}\n";
+        }
+
+        foreach ($this->connections as $conn) {
+            $str .= "CONNECT:{$conn}\n";
         }
 
         $this->logger->debug("TO UI: ".$str);
@@ -221,10 +227,10 @@ class Callcenter
 
         unset($this->callers[$caller->uid]);
 
-        if (isset($this->bridges[$caller->uid])) {
-            $agent = $this->bridges[$caller->uid]->agent;
+        if (isset($this->connections[$caller->uid])) {
+            $agent = $this->connections[$caller->uid]->agent;
             $this->setAgentStatus($agent, 'AVAIL');
-            unset($this->bridges[$caller->uid]);
+            unset($this->connections[$caller->uid]);
         }
 
 
@@ -245,7 +251,7 @@ class Callcenter
         $caller->setQueue($queue);
         $this->setCallerStatus($caller, 'QUEUED');
 
-        $this->websocket->sendtoAll("CALLERJOIN:{$caller}|{$caller->queue}");
+        $this->websocket->sendtoAll("CALLERJOIN:{$caller}");
 
         $this->logger->info("Caller {$caller} was queued in queue {$caller->queue}");
     }
@@ -264,19 +270,22 @@ class Callcenter
         $agent = $this->agents[$agentid];
         $caller = $this->callers[$uid];
 
-        if (!isset($this->bridges[$uid])) {
+        if (!isset($this->connections[$uid])) {
             $agent->setQueue($caller->getQueue());
             $this->setAgentStatus($agent, 'INCALL');
             $this->setCallerStatus($caller, 'INCALL');
 
-            $this->bridges[$uid] = new Bridge($caller, $agent);
-            $this->websocket->sendtoAll("CONNECT:{$agent}:{$caller}");
+            $conn = new Connection($caller, $agent);
+            $this->websocket->sendtoAll("CONNECT:{$conn}");
+            $this->connections[$uid] = $conn;
 
             $this->logger->info("Caller {$caller} was connected to agent {$agent}");
         }
     }
 
     /**
+     * Set status on Caller and notify UI
+     *
      * @param Caller $caller
      * @param string $status
      */
@@ -294,6 +303,8 @@ class Callcenter
     }
 
     /**
+     * Set status on Agent and notify UI
+     *
      * @param Agent $agent
      * @param string $status
      */

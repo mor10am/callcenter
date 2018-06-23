@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Callcenter\Model;
 
-class Bridge
+class Connection
 {
     /**
      @var \Callcenter\Model\Agent
@@ -31,5 +31,13 @@ class Bridge
         $this->agent = $agent;
 
         $this->time = time();
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString() : string
+    {
+        return "{$this->agent}:{$this->caller}";
     }
 }
