@@ -5,12 +5,18 @@ declare(strict_types=1);
  * This is based on the PAMI\Client\Impl\ClientImpl class
  * by Marcelo Gornstein
  *
- * @link       http://marcelog.github.com/PAMI/
+ * @link http://marcelog.github.com/PAMI/
  */
 
 namespace Callcenter;
 
 use PAMI\Message\Event\EventMessage;
+use PAMI\Message\Event\BridgeEnterEvent;
+use PAMI\Message\Event\UserEventEvent;
+use PAMI\Message\Event\QueueMemberPausedEvent;
+use PAMI\Message\Event\QueueCallerJoinEvent;
+
+
 use PAMI\Message\Action\LoginAction;
 use PAMI\Message\Action\QueuePauseAction;
 use PAMI\Message\Action\QueueUnpauseAction;
@@ -126,67 +132,125 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             case "UserEvent":
                 switch ($event->getUserEventName()) {
                     case 'CALLER':
-                        $this->emit('caller.new', [
-                            $event->getKey('calleridnum'),
-                            $event->getKey('uniqueid')
-                        ]);
-                        $this->logger->debug("UID of caller ".$event->getKey('calleridnum')." is ".$event->getKey('uniqueid'));
+                        $this->handleNewCaller($event);
                         break;
                     case 'CALLERHANGUP':
-                        $this->emit('caller.hangup', [
-                            $event->getKey('calleridnum'),
-                            $event->getKey('uniqueid')
-                        ]);
+                        $this->handleHangupCaller($event);
                         break;
                     case 'LOGGEDIN':
-                        $this->emit('agent.loggedin', [
-                            $event->getKey('calleridnum')
-                        ]);
-
-                        $this->logger->debug("UID of agent ".$event->getKey('calleridnum')." is ".$event->getKey('uniqueid'));
+                        $this->handleAgentLogin($event);
                         break;
                     case 'LOGGEDOUT':
-                        $this->emit('agent.loggedout', [
-                            $event->getKey('calleridnum')
-                        ]);
+                        $this->handleAgentLogout($event);
                         break;
                 }
                 break;
             case "QueueMemberPause":
-                $agentstatus = strtolower(($event->getKey("paused") == 1)?"PAUSED":"AVAIL");
-
-                $this->emit("agent.{$agentstatus}", [
-                    $event->getKey('calleridnum')
-                ]);
-                break;
-            case "QueueMemberStatus":
-                //echo "\n".$event->serialize()."\n";
+                $this->handleAgentPause($event);
                 break;
             case "QueueCallerJoin":
-                $this->emit('caller.queued', [
-                    $event->getKey('calleridnum'),
-                    $event->getKey('uniqueid'),
-                    $event->getKey('queue'),
-                ]);
+                $this->handleCallerEnterQueue($event);
                 break;
             case "BridgeEnter":
-                $agentid = $event->getKey('calleridnum');
-                $callerid = $event->getKey('connectedlinenum');
-                $uid = $event->getKey('linkedid');
-
-                if ($agentid and $callerid) {
-                    $this->emit('queue.connect', [
-                        $agentid,
-                        $callerid,
-                        $uid,
-                    ]);
-                }
+                $this->handleConnectCallerAndAgent($event);
                 break;
             default:
                 break;
         }
     }
 
+    /**
+     * @param BridgeEnterEvent $event
+     */
+    protected function handleConnectCallerAndAgent(BridgeEnterEvent $event) :  void
+    {
+        $agentid = $event->getKey('calleridnum');
+        $callerid = $event->getKey('connectedlinenum');
+        $uid = $event->getKey('linkedid');
+
+        if ($agentid and $callerid) {
+            $this->emit('queue.connect', [
+                $agentid,
+                $callerid,
+                $uid,
+            ]);
+        }        
+    }
+
+    /**
+     * @param QueueCallerJoinEvent $event
+     */
+    protected function handleCallerEnterQueue(QueueCallerJoinEvent $event) : void
+    {
+        $this->emit('caller.queued', [
+            $event->getKey('calleridnum'),
+            $event->getKey('uniqueid'),
+            $event->getKey('queue'),
+        ]);
+    }
+
+    /**
+     * @param QueueMemberPausedEvent $event
+     */
+    protected function handleAgentPause(QueueMemberPausedEvent $event) : void
+    {
+        $agentstatus = strtolower(($event->getKey("paused") == 1)?"PAUSED":"AVAIL");
+
+        $this->emit("agent.{$agentstatus}", [
+            $event->getKey('calleridnum')
+        ]);
+    }
+
+    /**
+     * @param UserEventEvent $event
+     */
+    protected function handleAgentLogout(UserEventEvent $event) : void
+    {
+        $this->emit('agent.loggedout', [
+            $event->getKey('calleridnum')
+        ]);
+    }
+
+    /**
+     * @param UserEventEvent $event
+     */
+    protected function handleAgentLogin(UserEventEvent $event) : void
+    {
+        $this->emit('agent.loggedin', [
+            $event->getKey('calleridnum')
+        ]);
+
+        $this->logger->debug("UID of agent ".$event->getKey('calleridnum')." is ".$event->getKey('uniqueid'));
+    }
+
+    /**
+     * @param UserEventEvent $event
+     */
+    protected function handleHangupCaller(UserEventEvent $event) : void
+    {
+        $this->emit('caller.hangup', [
+            $event->getKey('calleridnum'),
+            $event->getKey('uniqueid')
+        ]);
+    }
+
+    /**
+     * @param UserEventEvent $event
+     */
+    protected function handleNewCaller(UserEventEvent $event) : void
+    {
+        $this->emit('caller.new', [
+            $event->getKey('calleridnum'),
+            $event->getKey('uniqueid')
+        ]);
+
+        $this->logger->debug("UID of caller ".$event->getKey('calleridnum')." is ".$event->getKey('uniqueid'));
+    }
+
+    /**
+     * Send action to Asterisk to unpause the agent
+     * @param $agentid
+     */
     public function unpauseAgent($agentid)
     {
         $channel = "local/{$agentid}@agent-connect";
@@ -200,6 +264,10 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         $this->logger->debug("Unpause $channel");
     }
 
+    /**
+     * Send action to Asterisk to pause the agent
+     * @param $agentid
+     */
     public function pauseAgent($agentid)
     {
         $channel = "local/{$agentid}@agent-connect";
