@@ -1,22 +1,30 @@
 <?php
+declare(strict_types=1);
 
 namespace Callcenter;
 
 use Evenement\EventEmitter;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
-use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 
 final class WebsocketHandler extends EventEmitter implements MessageComponentInterface
 {
+    /**
+     * @var \SplObjectStorage
+     */
     private $clients;
+
+    /**
+     * @var \Psr\Log\LoggerInterface
+     */
     private $logger;
 
     /**
      * WebsocketHandler constructor.
-     * @param Logger $logger
+     * @param LoggerInterface $logger
      */
-    public function __construct(Logger $logger)
+    public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
         $this->clients = new \SplObjectStorage;
@@ -25,7 +33,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
     /**
      * @param ConnectionInterface $conn
      */
-    public function onOpen(ConnectionInterface $conn)
+    public function onOpen(ConnectionInterface $conn) : void
     {
         $this->clients->attach($conn);
     }
@@ -34,7 +42,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
      * @param ConnectionInterface $from
      * @param string $msg
      */
-    public function onMessage(ConnectionInterface $from, $msg)
+    public function onMessage(ConnectionInterface $from, $msg = '') : void
     {
         $this->logger->debug("WS: " . $msg);
 
@@ -63,7 +71,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
     /**
      * @param $msg
      */
-    public function sendtoAll($msg)
+    public function sendtoAll(string $msg) : void
     {
         foreach ($this->clients as $client) {
             $client->send($msg);
@@ -73,7 +81,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
     /**
      * @param ConnectionInterface $conn
      */
-    public function onClose(ConnectionInterface $conn)
+    public function onClose(ConnectionInterface $conn) : void
     {
         $this->clients->detach($conn);
     }
@@ -82,7 +90,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
      * @param ConnectionInterface $conn
      * @param \Exception $e
      */
-    public function onError(ConnectionInterface $conn, \Exception $e)
+    public function onError(ConnectionInterface $conn, \Exception $e) : void
     {
         $conn->close();
     }

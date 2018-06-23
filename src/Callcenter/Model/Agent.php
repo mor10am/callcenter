@@ -1,12 +1,28 @@
 <?php
+declare(strict_types=1);
 
 namespace Callcenter\Model;
 
 class Agent
 {
+    /**
+     * @var string
+     */
     public $agentid;
+
+    /**
+     * @var string
+     */
     public $status = "NA";
-    public $queue;
+
+    /**
+     * @var string
+     */
+    public $queue = "";
+
+    /**
+     * @var int
+     */
     public $time;
 
     /**
@@ -51,20 +67,24 @@ class Agent
         return $this->queue;
     }
 
-    public function setQueue($queue)
+    /**
+     * @var string $queue
+     */
+    public function setQueue(string $queue) : void
     {
         $this->queue = $queue;
     }
 
     /**
      * @param string $status
+     * @return bool
      */
-    public function setStatus(string $status)
+    public function setStatus(string $status) : bool
     {
         $status = strtoupper($status);
 
         if ($this->status == $status) {
-            return;
+            return false;
         }
 
         if ($status != 'INCALL') {
@@ -80,12 +100,15 @@ class Agent
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString() : string
     {
         return "{$this->agentid}|{$this->status}";
     }
 
-    public function getReportLine()
+    /**
+     * @return string
+     */
+    public function getReportLine() : string
     {
         $duration = time() - $this->time;
 

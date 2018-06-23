@@ -1,14 +1,39 @@
 <?php
+declare(strict_types=1);
 
 namespace Callcenter\Model;
 
 class Caller
 {
+    /**
+     * @var string
+     */
     public $callerid;
+
+    /**
+     * @var string
+     */
     public $uid;
+
+    /**
+     * @var string
+     */
     public $hash;
-    public $queue;
+
+    /**
+     * @var string
+     */
+    public $queue = '';
+
+    /**
+     * @var string
+     */
     public $status = "NA";
+
+    /**
+     * @var int
+     */
+    public $time;
 
     /**
      * Caller constructor.
@@ -28,7 +53,7 @@ class Caller
     /**
      * @param string $queue
      */
-    public function setQueue(string $queue)
+    public function setQueue(string $queue) : void
     {
         $this->queue = $queue;
         $this->setStatus('QUEUED');
@@ -60,13 +85,14 @@ class Caller
 
     /**
      * @param string $status
+     * @return bool
      */
-    public function setStatus(string $status)
+    public function setStatus(string $status) : bool
     {
         $status = strtoupper($status);
 
         if ($this->status == $status) {
-            return;
+            return false;
         }
 
         $this->status = $status;
@@ -78,12 +104,15 @@ class Caller
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString() : string
     {
         return (($this->callerid)?:"anonymous")."|{$this->status}|{$this->hash}";
     }
 
-    public function getReportLine()
+    /**
+     * @return string
+     */
+    public function getReportLine() : string
     {
         $duration = time() - $this->time;
 

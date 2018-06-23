@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * This is based on the PAMI\Client\Impl\ClientImpl class
@@ -26,7 +27,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
     /**
      * PSR-3 logger.
-     * @var LoggerInterface
+     * @var \Psr\Log\LoggerInterface
      */
     private $logger;
 
@@ -42,19 +43,19 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
     /**
      * Event factory.
-     * @var EventFactoryImpl
+     * @var \PAMI\Message\Event\Factory\Impl\EventFactoryImpl
      */
     private $eventFactory;
 
     /**
      * Our event listeners
-     * @var IEventListener[]
+     * @var \PAMI\Listener\IEventListener[]
      */
     private $eventListeners;
 
     /**
      * The receiving queue.
-     * @var IncomingMessage[]
+     * @var \PAMI\Message\IncomingMessage[]
      */
     private $incomingQueue;
 
@@ -119,7 +120,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     /**
      * @param EventMessage $event
      */
-    public function handle(EventMessage $event)
+    public function handle(EventMessage $event) : void
     {
         switch ($event->getName()) {
             case "UserEvent":
@@ -292,7 +293,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      * @param null $predicate
      * @return string
      */
-    public function registerEventListener($listener, $predicate = null)
+    public function registerEventListener($listener, $predicate = null) : string
     {
         $listenerId = uniqid('PamiListener');
         $this->eventListeners[$listenerId] = array($listener, $predicate);
@@ -319,7 +320,6 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
     /**
      * @param \PAMI\Message\OutgoingMessage $message
-     * @return ResponseMessage|void
      */
     public function send(\PAMI\Message\OutgoingMessage $message)
     {
@@ -349,7 +349,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             return $this->incomingQueue[$actionId];
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -359,7 +359,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      *
      * @return \PAMI\Message\Response\ResponseMessage
      */
-    private function messageToResponse($msg) : ResponseMessage
+    private function messageToResponse($msg)
     {
         $response = new ResponseMessage($msg);
         $actionId = $response->getActionId();
@@ -377,7 +377,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      *
      * @return \PAMI\Message\Event\EventMessage
      */
-    private function messageToEvent($msg)
+    private function messageToEvent($msg) : EventMessage
     {
         return $this->eventFactory->createFromRaw($msg);
     }

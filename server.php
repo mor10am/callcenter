@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 require_once __DIR__."/vendor/autoload.php";
 
@@ -68,5 +69,3 @@ $asteriskmanager->on('caller.queued', [$callcenter, 'callerQueued']);
 $asteriskmanager->on('queue.connect', [$callcenter, 'callerAndAgentConnected']);
 
 $app->run();
-
-

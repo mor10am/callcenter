@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Callcenter;
 
@@ -13,27 +14,41 @@ use Ratchet\ConnectionInterface;
 
 class Callcenter
 {
-    /* @var \Callcenter\WebsocketHandler $websocket */
+    /**
+     * @var \Callcenter\WebsocketHandler $websocket
+     */
     private $websocket;
 
-    /* @var \Callcenter\AsteriskManager $ami */
+    /**
+     * @var \Callcenter\AsteriskManager $ami
+     */
     private $ami;
 
-    /* @var LoggerInterface $logger */
+    /**
+     * @var \Psr\Log\LoggerInterface $logger
+     */
     private $logger;
 
-    /* @var array $settings */
+    /**
+     * @var array $settings
+     */
     private $settings = [
         'report' => false
     ];
 
-    /* @var array $agents */
+    /**
+     * @var array
+     */
     private $agents = [];
 
-    /* @var array $callers */
+    /**
+     * @var array
+     */
     private $callers = [];
 
-    /* @var array $bridges */
+    /**
+     * @var array
+     */
     private $bridges = [];
 
     /**
@@ -58,7 +73,7 @@ class Callcenter
     /**
      * @param ConnectionInterface $conn
      */
-    public function websocketHello(ConnectionInterface $conn)
+    public function websocketHello(ConnectionInterface $conn) : void
     {
         $str = "";
 
@@ -76,7 +91,7 @@ class Callcenter
      * @param $agentid
      * @param string $force
      */
-    public function websocketToggleAvail(ConnectionInterface $conn, $agentid, $force = "")
+    public function websocketToggleAvail(ConnectionInterface $conn, string $agentid, string $force = "") : void
     {
         if (!isset($this->agents[$agentid])) {
             return;
@@ -98,7 +113,7 @@ class Callcenter
      * @param string $agentid
      * @return Agent
      */
-    private function getOrCreateAgent($agentid) : Agent
+    private function getOrCreateAgent(string $agentid) : Agent
     {
         if (!isset($this->agents[$agentid])) {
             $this->agents[$agentid] = new Agent($agentid);
@@ -125,7 +140,7 @@ class Callcenter
      * @param ConnectionInterface $conn
      * @param $agentid
      */
-    public function websocketSetAgentAvail(ConnectionInterface $conn, $agentid)
+    public function websocketSetAgentAvail(ConnectionInterface $conn, string $agentid) : void
     {
         if (!isset($this->agents[$agentid])) {
             $this->agents[$agentid] = new \Callcenter\Model\Agent($agentid);
@@ -140,7 +155,7 @@ class Callcenter
     /**
      * @param $agentid
      */
-    public function agentLoggedIn($agentid)
+    public function agentLoggedIn(string $agentid) : void
     {
         $this->setAgentStatus(
             $this->getOrCreateAgent($agentid),
@@ -151,7 +166,7 @@ class Callcenter
     /**
      * @param $agentid
      */
-    public function agentLoggedOut($agentid)
+    public function agentLoggedOut(string $agentid) : void
     {
         $this->setAgentStatus(
             $this->getOrCreateAgent($agentid),
@@ -162,7 +177,7 @@ class Callcenter
     /**
      * @param $agentid
      */
-    public function agentPaused($agentid)
+    public function agentPaused(string $agentid) : void
     {
         $this->setAgentStatus(
             $this->getOrCreateAgent($agentid),
@@ -173,7 +188,7 @@ class Callcenter
     /**
      * @param $agentid
      */
-    public function agentAvail($agentid)
+    public function agentAvail(string $agentid) : void
     {
         $this->setAgentStatus(
             $this->getOrCreateAgent($agentid),
@@ -185,7 +200,7 @@ class Callcenter
      * @param string $callerid
      * @param string $uid
      */
-    public function callerNew(string $callerid, string $uid)
+    public function callerNew(string $callerid, string $uid) : void
     {
         $caller = $this->getOrCreateCaller($callerid, $uid);
 
@@ -198,7 +213,7 @@ class Callcenter
      * @param string $callerid
      * @param string $uid
      */
-    public function callerHangup(string $callerid, string $uid)
+    public function callerHangup(string $callerid, string $uid) : void
     {
         $caller = $this->getOrCreateCaller($callerid, $uid);
 
@@ -223,7 +238,7 @@ class Callcenter
      * @param string $uid
      * @param string $queue
      */
-    public function callerQueued(string $callerid, string $uid, string $queue)
+    public function callerQueued(string $callerid, string $uid, string $queue) : void
     {
         $caller = $this->getOrCreateCaller($callerid, $uid);
 
@@ -240,7 +255,7 @@ class Callcenter
      * @param string $callerid
      * @param string $uid
      */
-    public function callerAndAgentConnected(string $agentid, string $callerid, string $uid)
+    public function callerAndAgentConnected(string $agentid, string $callerid, string $uid) : void
     {
         if (!isset($this->agents[$agentid]) or !isset($this->callers[$uid])) {
             return;
@@ -263,9 +278,9 @@ class Callcenter
 
     /**
      * @param Caller $caller
-     * @param $status
+     * @param string $status
      */
-    private function setCallerStatus(Caller $caller, $status)
+    private function setCallerStatus(Caller $caller, string $status) : void
     {
         $report = $caller->getReportLine();
 
@@ -280,9 +295,9 @@ class Callcenter
 
     /**
      * @param Agent $agent
-     * @param $status
+     * @param string $status
      */
-    private function setAgentStatus(Agent $agent, $status)
+    private function setAgentStatus(Agent $agent, string $status) : void
     {
         $report = $agent->getReportLine();
 
