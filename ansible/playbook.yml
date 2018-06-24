@@ -7,6 +7,12 @@
   - name: install packages
     apt: name={{ item }} update_cache=yes state=latest cache_valid_time=86400
     with_items:
+        - asterisk
+        - asterisk-modules
+        - asterisk-config
+        - asterisk-core-sounds-en
+        - asterisk-core-sounds-en-gsm
+        - asterisk-moh-opsound-gsm
         - php-cli
         - php-common
         - php-json
@@ -22,10 +28,10 @@
       state: directory
       mode: 0755
 
-  #- name: empty asterisk etc folder
-  #  file:
-  #    path: /etc/asterisk
-  #    state: absent
+  - name: empty asterisk etc folder
+    file:
+      path: /etc/asterisk
+      state: absent
 
   - name: copy asterisk etc folder to project
     copy:
@@ -33,7 +39,6 @@
       dest: /etc/asterisk/
     notify:
       - reload asterisk
-
 
   handlers:
     - name: reload asterisk
