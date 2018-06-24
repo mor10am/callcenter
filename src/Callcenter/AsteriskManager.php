@@ -12,10 +12,10 @@ namespace Callcenter;
 
 use PAMI\Message\Event\EventMessage;
 use PAMI\Message\Event\BridgeEnterEvent;
+use PAMI\Message\Event\UnknownEvent;
 use PAMI\Message\Event\UserEventEvent;
 use PAMI\Message\Event\QueueMemberPausedEvent;
 use PAMI\Message\Event\QueueCallerJoinEvent;
-
 
 use PAMI\Message\Action\LoginAction;
 use PAMI\Message\Action\QueuePauseAction;
@@ -311,7 +311,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             } elseif ($evePos !== false) {
                 $event = $this->messageToEvent($aMsg);
                 $response = $this->findResponse($event);
-                if ($response === false || $response->isComplete()) {
+                if (!$response || $response->isComplete()) {
                     $this->dispatch($event);
                 } else {
                     $response->addEvent($event);
@@ -447,6 +447,14 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      */
     private function messageToEvent($msg) : EventMessage
     {
+        $event = $this->eventFactory->createFromRaw($msg);
+
+        if (!$event instanceof UnknownEvent) {
+            return $event;
+        }
+
+        // https://github.com/marcelog/PAMI/issues/139
+        $msg = str_replace('QueueMemberPause', 'QueueMemberPaused', $msg);
         return $this->eventFactory->createFromRaw($msg);
     }
 }
