@@ -94,7 +94,7 @@ class Callcenter
 
     /**
      * @param ConnectionInterface $conn
-     * @param $agentid
+     * @param string $agentid
      * @param string $force
      */
     public function websocketToggleAvail(ConnectionInterface $conn, string $agentid, string $force = "") : void
@@ -144,7 +144,7 @@ class Callcenter
 
     /**
      * @param ConnectionInterface $conn
-     * @param $agentid
+     * @param string $agentid
      */
     public function websocketSetAgentAvail(ConnectionInterface $conn, string $agentid) : void
     {
@@ -159,7 +159,7 @@ class Callcenter
     }
 
     /**
-     * @param $agentid
+     * @param string $agentid
      */
     public function agentLoggedIn(string $agentid) : void
     {
@@ -170,7 +170,7 @@ class Callcenter
     }
 
     /**
-     * @param $agentid
+     * @param string $agentid
      */
     public function agentLoggedOut(string $agentid) : void
     {
@@ -181,7 +181,7 @@ class Callcenter
     }
 
     /**
-     * @param $agentid
+     * @param string $agentid
      */
     public function agentPaused(string $agentid) : void
     {
@@ -192,7 +192,7 @@ class Callcenter
     }
 
     /**
-     * @param $agentid
+     * @param string $agentid
      */
     public function agentAvail(string $agentid) : void
     {

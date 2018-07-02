@@ -96,7 +96,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         $this->eventListeners = array();
         $this->eventFactory = new EventFactoryImpl();
         $this->incomingQueue = array();
-        $this->lastActionId = false;
+        $this->lastActionId = "";
 
         $that = $this;
 
@@ -130,20 +130,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     {
         switch ($event->getName()) {
             case "UserEvent":
-                switch ($event->getUserEventName()) {
-                    case 'CALLER':
-                        $this->handleNewCaller($event);
-                        break;
-                    case 'CALLERHANGUP':
-                        $this->handleHangupCaller($event);
-                        break;
-                    case 'LOGGEDIN':
-                        $this->handleAgentLogin($event);
-                        break;
-                    case 'LOGGEDOUT':
-                        $this->handleAgentLogout($event);
-                        break;
-                }
+                $this->handleUserEvent($event);
                 break;
             case "QueueMemberPause":
                 $this->handleAgentPause($event);
@@ -155,6 +142,24 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
                 $this->handleConnectCallerAndAgent($event);
                 break;
             default:
+                break;
+        }
+    }
+
+    protected function handleUserEvent(UserEventEvent $event)
+    {
+        switch ($event->getUserEventName()) {
+            case 'CALLER':
+                $this->handleNewCaller($event);
+                break;
+            case 'CALLERHANGUP':
+                $this->handleHangupCaller($event);
+                break;
+            case 'LOGGEDIN':
+                $this->handleAgentLogin($event);
+                break;
+            case 'LOGGEDOUT':
+                $this->handleAgentLogout($event);
                 break;
         }
     }
@@ -249,7 +254,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
     /**
      * Send action to Asterisk to unpause the agent
-     * @param $agentid
+     * @param string $agentid
      */
     public function unpauseAgent($agentid)
     {
@@ -266,7 +271,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
     /**
      * Send action to Asterisk to pause the agent
-     * @param $agentid
+     * @param string $agentid
      */
     public function pauseAgent($agentid)
     {
@@ -282,7 +287,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     }
 
     /**
-     * @param $data
+     * @param string $data
      */
     public function messageDispatcher($data)
     {
@@ -335,6 +340,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         foreach ($this->eventListeners as $data) {
             $listener = $data[0];
             $predicate = $data[1];
+
             if (is_callable($predicate) && !call_user_func($predicate, $message)) {
                 continue;
             }

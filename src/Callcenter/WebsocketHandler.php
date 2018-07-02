@@ -69,7 +69,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
     }
 
     /**
-     * @param $msg
+     * @param string $msg
      */
     public function sendtoAll(string $msg) : void
     {
