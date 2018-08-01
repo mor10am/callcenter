@@ -31,10 +31,14 @@ $app->route(
     array('*')
 );
 
-$ami = new \React\Stream\DuplexResourceStream(
-    stream_socket_client('tcp://127.0.0.1:5038'),
-    $loop
-);
+try {
+  $ami = new \React\Stream\DuplexResourceStream(
+      stream_socket_client('tcp://127.0.0.1:5038'),
+      $loop
+  );
+} catch (\Exception $e) {
+  die($e->getMessage());
+}
 
 $asteriskmanager = new Callcenter\AsteriskManager(
     $ami,
