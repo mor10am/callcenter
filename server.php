@@ -18,7 +18,7 @@ $options = [
 ];
 
 $logger = new Monolog\Logger('callcenter');
-$logger->pushHandler(new Monolog\Handler\StreamHandler('php://output'));
+$logger->pushHandler(new Monolog\Handler\StreamHandler('log/callcenter.log'));
 
 $loop = React\EventLoop\Factory::create();
 
@@ -28,7 +28,7 @@ $app = new Ratchet\App('127.0.0.1', 8080, '0.0.0.0', $loop);
 $app->route(
     '/callcenter',
     $websockethandler,
-    array('*')
+    ['*']
 );
 
 try {
@@ -71,5 +71,7 @@ $asteriskmanager->on('caller.hangup', [$callcenter, 'callerHangup']);
 $asteriskmanager->on('caller.queued', [$callcenter, 'callerQueued']);
 
 $asteriskmanager->on('queue.connect', [$callcenter, 'callerAndAgentConnected']);
+
+$logger->info("Server started.");
 
 $app->run();
