@@ -118,8 +118,11 @@ class Caller
      */
     public function getReportLine() : string
     {
-        $duration = time() - $this->time;
+        $ts = time();
 
-        return date('Y-m-d H:i:s').";CALLER;{$this->callerid};{$this->status};$duration;{$this->queue}";
+        $duration = $ts - $this->time;
+        $at = $ts - $duration;
+
+        return date('Y-m-d H:i:s', $at).";CALLER;{$this->callerid};{$this->status};$duration;{$this->queue}";
     }
 }

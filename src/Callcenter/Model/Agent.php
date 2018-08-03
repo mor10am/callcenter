@@ -110,8 +110,11 @@ class Agent
      */
     public function getReportLine() : string
     {
-        $duration = time() - $this->time;
+        $ts = time();
 
-        return date('Y-m-d H:i:s').";AGENT;{$this->agentid};{$this->status};$duration;{$this->queue}";
+        $duration = $ts - $this->time;
+        $at = $ts - $duration;
+
+        return date('Y-m-d H:i:s', $at).";AGENT;{$this->agentid};{$this->status};$duration;{$this->queue}";
     }
 }
