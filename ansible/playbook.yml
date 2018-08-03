@@ -13,6 +13,7 @@
         - asterisk-core-sounds-en
         - asterisk-core-sounds-en-gsm
         - asterisk-moh-opsound-gsm
+        - composer
         - php-cli
         - php-common
         - php-json
@@ -28,6 +29,28 @@
       state: directory
       mode: 0755
 
+  - name: create project log folder
+    file:
+      path: /opt/callcenter/log
+      state: directory
+      mode: 0755
+
+  - name: copy source
+    copy:
+      src: "{{ item }}"
+      dest: /opt/callcenter
+    with_items:
+      - ../server.php
+      - ../src
+      - ../composer.json
+      - ../composer.lock
+      - ../public
+
+  - name: install PHP dependencies with Composer
+    command: composer install --no-dev --prefer-dist
+    args:
+      chdir: /opt/callcenter
+
   - name: empty asterisk etc folder
     file:
       path: /etc/asterisk
@@ -40,6 +63,18 @@
     notify:
       - reload asterisk
 
+  - name: Restart PHP processes
+    command: killall php
+    notify:
+      - start server
+      - serve dashboard
+
   handlers:
     - name: reload asterisk
       shell: asterisk -rx'core reload'
+
+    - name: start server
+      shell: cd /opt/callcenter; nohup php /opt/callcenter/server.php </dev/null >/dev/null 2>&1 &
+
+    - name: serve dashboard
+      shell: cd /opt/callcenter; nohup php -S 0.0.0.0:5000 -t /opt/callcenter/public/ </dev/null >/dev/null 2>&1 &
