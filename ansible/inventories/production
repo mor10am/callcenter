@@ -1,4 +1,4 @@
 [asterisk]
-127.0.0.1
+callcenter.local
 
 [asterisk:vars]

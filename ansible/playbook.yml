@@ -63,8 +63,12 @@
     notify:
       - reload asterisk
 
-  - name: Restart PHP processes
+  - name: Kill PHP processes
     command: killall php
+    ignore_errors: yes
+
+  - debug: msg="Restart PHP processes"
+    changed_when: True
     notify:
       - start server
       - serve dashboard

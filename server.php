@@ -24,7 +24,7 @@ $loop = React\EventLoop\Factory::create();
 
 $websockethandler = new \Callcenter\WebsocketHandler($logger);
 
-$app = new Ratchet\App('127.0.0.1', 8080, '0.0.0.0', $loop);
+$app = new Ratchet\App('callcenter.local', 8080, '0.0.0.0', $loop);
 $app->route(
     '/callcenter',
     $websockethandler,
