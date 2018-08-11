@@ -45,6 +45,16 @@ read = call,agent,user,security
 write = call,command,agent,user,originate
 ```
 
+* http.conf
+
+```
+enabled=yes
+bindaddr=0.0.0.0
+bindport=8088
+enablestatic=yes
+redirect= / /static/index.html
+```
+
 * queues.conf
 
 ```

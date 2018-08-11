@@ -33,9 +33,10 @@
     file:
       path: /opt/callcenter/log
       state: directory
-      mode: 0755
+      mode: 0777
+      recurse: true
 
-  - name: copy source
+  - name: copy PHP source
     copy:
       src: "{{ item }}"
       dest: /opt/callcenter
@@ -44,20 +45,22 @@
       - ../src
       - ../composer.json
       - ../composer.lock
-      - ../public
+
+
+  - name: copy static source
+    copy:
+      src: "{{ item }}"
+      dest: /usr/share/asterisk/static-http
+    with_items:
+      - ../public/
 
   - name: install PHP dependencies with Composer
     command: composer install --no-dev --prefer-dist
     args:
       chdir: /opt/callcenter
 
-  - name: empty asterisk etc folder
-    file:
-      path: /etc/asterisk
-      state: absent
-
   - name: copy asterisk etc folder to project
-    copy:
+    synchronize:
       src: asterisk/etc/
       dest: /etc/asterisk/
     notify:
@@ -71,7 +74,6 @@
     changed_when: True
     notify:
       - start server
-      - serve dashboard
 
   handlers:
     - name: reload asterisk
@@ -79,6 +81,3 @@
 
     - name: start server
       shell: cd /opt/callcenter; nohup php /opt/callcenter/server.php </dev/null >/dev/null 2>&1 &
-
-    - name: serve dashboard
-      shell: cd /opt/callcenter; nohup php -S 0.0.0.0:5000 -t /opt/callcenter/public/ </dev/null >/dev/null 2>&1 &
