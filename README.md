@@ -1,6 +1,6 @@
-== Callcenter ==
+# Callcenter
 
-Server process is started:
+## Server process and frontend
 
 ```
 $> php server.php
@@ -15,7 +15,7 @@ at http://callcenter.local:8088
 The webpage will connect to the websocket server and on connection
 get the current state of the the backend server process.
 
-Changes from default configuration files in Asterisk:
+## Changes from default configuration files in Asterisk:
 
 * sip.conf
 
