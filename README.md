@@ -2,14 +2,15 @@
 
 Server process is started:
 
+```
 $> php server.php
+```
 
-It will listen to Asterisk AMI on tcp://127.0.0.1:5038
-and create a Websocket server on tcp://127.0.0.1:8080/callcenter
+It will listen to Asterisk AMI on tcp://callcenter.local:5038
+and create a Websocket server on tcp://callcenter.local:8080/callcenter
 
-The webpage dashboard is a static HTML/JS page started:
-
-$> google-chrome public/index.html
+The webpage dashboard is served by builtin Asterisk HTTP server
+at http://callcenter.local:8088
 
 The webpage will connect to the websocket server and on connection
 get the current state of the the backend server process.
