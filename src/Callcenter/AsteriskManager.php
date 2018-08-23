@@ -79,6 +79,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     private $eventMask;
 
     /**
+     * Template for the queue member channel (ex. local/{{agentid}}@context)
+     * The {{agentid}} part will be replaced
+     * @var string|null
+     */
+    private $memberTemplate;
+
+    /**
      * AsteriskManager constructor.
      * @param \React\Stream\DuplexResourceStream $stream
      * @param array $options
@@ -97,22 +104,24 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         $this->eventFactory = new EventFactoryImpl();
         $this->incomingQueue = array();
         $this->lastActionId = "";
-
-        $that = $this;
-
-        $stream->on('data', function ($data) use ($that) {
-            $that->messageDispatcher($data);
-        });
+        $this->memberTemplate = isset($options['member_template']) ? $options['member_template'] : null;
 
         $this->registerEventListener($this);
 
-        $loginaction = (new LoginAction(
-            $this->options['username'],
-            $this->options['password']
-        ))->serialize();
+        $that = $this;
 
-        $this->stream->write(
-            $loginaction
+        $this->stream->on('data', function ($data) use ($that) {
+            $that->messageDispatcher($data);
+        });
+    }
+
+    public function login($username, $password)
+    {
+        $this->send(
+            (new LoginAction(
+                $username,
+                $password
+            ))
         );
     }
 
@@ -179,7 +188,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
                 $callerid,
                 $uid,
             ]);
-        }        
+        }
     }
 
     /**
@@ -224,8 +233,6 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         $this->emit('agent.loggedin', [
             $event->getKey('calleridnum')
         ]);
-
-        $this->logger->debug("UID of agent ".$event->getKey('calleridnum')." is ".$event->getKey('uniqueid'));
     }
 
     /**
@@ -247,9 +254,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         $this->emit('caller.new', [
             $event->getKey('calleridnum'),
             $event->getKey('uniqueid')
-        ]);
-
-        $this->logger->debug("UID of caller ".$event->getKey('calleridnum')." is ".$event->getKey('uniqueid'));
+        ]);        
     }
 
     /**
@@ -258,15 +263,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      */
     public function unpauseAgent($agentid)
     {
-        $channel = "local/{$agentid}@agent-connect";
+        $member = str_replace("{{agentid}}", $agentid, $this->memberTemplate);
 
-        $this->stream->write(
-            (new QueueUnpauseAction(
-                $channel
-            ))->serialize()
+        $this->send(
+            new QueueUnpauseAction($member)
         );
 
-        $this->logger->debug("Unpause $channel");
+        $this->logger->debug("Unpause $member");
     }
 
     /**
@@ -275,15 +278,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      */
     public function pauseAgent($agentid)
     {
-        $channel = "local/{$agentid}@agent-connect";
+        $member = str_replace("{{agentid}}", $agentid, $this->memberTemplate);
 
-        $this->stream->write(
-            (new QueuePauseAction(
-                "local/{$agentid}@agent-connect"
-            ))->serialize()
+        $this->send(
+            new QueuePauseAction($member)
         );
 
-        $this->logger->debug("Pause $channel");
+        $this->logger->debug("Pause $member");
     }
 
     /**
@@ -397,7 +398,9 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      */
     public function send(\PAMI\Message\OutgoingMessage $message)
     {
-        $this->stream->write($message->serialize());
+        $msg = $message->serialize();
+        $this->logger->debug($msg);
+        $this->stream->write($msg);
     }
 
     /**

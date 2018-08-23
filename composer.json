@@ -6,7 +6,8 @@
         "php" : ">= 7.1",
         "monolog/monolog": "^1.23",
         "cboden/ratchet": "^0.4.1",
-        "marcelog/pami": "^2.0"
+        "marcelog/pami": "^2.0",
+        "symfony/dotenv": "^4.1"
     },
     "license": "Apache-2.0",
     "authors": [

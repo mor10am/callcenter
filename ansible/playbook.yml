@@ -46,13 +46,17 @@
       - ../composer.json
       - ../composer.lock
 
+  - name: copy environment file
+    copy:
+      src: .env
+      dest: /opt/callcenter
 
   - name: copy static source
     copy:
       src: "{{ item }}"
       dest: /usr/share/asterisk/static-http
     with_items:
-      - ../public/
+      - ../public/static/
 
   - name: install PHP dependencies with Composer
     command: composer install --no-dev --prefer-dist

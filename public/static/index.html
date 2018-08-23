@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <title>Callcenter Dashboard</title>
+</head>
+<body>
+
+<div class="container">
+    <div id="app">
+      <div class="row">
+          <div class="col-sm">
+              <h3>Incoming calls</h3>
+              <call v-for="call in calls" :call="call" :key="call.id"/>
+          </div>
+          <div class="col-sm">
+              <h3>Agents</h3>
+              <agent v-for="agent in agents" :agent="agent" :key="agent.id" />
+          </div>
+          <div class="col-sm">
+              <h3>Connected calls</h3>
+              <connection v-for="connection in connections" :connection="connection" :key="connection.id"/>
+          </div>
+      </div>
+    </div>
+</div>
+
+<script src="js/vue.js"></script>
+
+<script type="text/x-template" id="agent-template">
+  <div class="row">
+    <div class="col-sm">
+      <div class="alert alert-info">{{ agent.id }} {{ agent.status }}
+        <button
+          class="btn btn-sm btn-info"
+          v-if="calcNextStatus != ''"
+          v-on:click="setStatus"
+          :value="calcNextStatus">
+          Go {{ calcNextStatus }}
+        </button>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-template" id="caller-template">
+  <div class="row">
+    <div class="col-sm">
+      <div class="alert alert-info">{{ call.id }} <span class="badge badge-secondary">{{ call.queue }}</span></div>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-template" id="connection-template">
+  <div class="row">
+    <div class="col-sm">
+      <div class="alert alert-success">Call {{ connection.call.id }} with agent {{ connection.agent.id }}</div>
+    </div>
+  </div>
+</script>
+
+<script>
+
+Vue.component('call', {
+  props: {
+    call: Object
+  },
+  template: '#caller-template'
+});
+
+Vue.component('agent', {
+  props: {
+    agent: Object
+  },
+  computed: {
+    calcNextStatus: function() {
+        switch (this.agent.status) {
+          case 'LOGGEDIN':
+          case 'PAUSED':
+            return 'AVAIL';
+          case 'AVAIL':
+            return 'PAUSE';
+          case 'LOGGEDOUT':
+          default:
+            return '';
+        }
+    }
+  },
+  methods: {
+    setStatus: function(event) {
+      let str = event.target.value+':'+this.agent.id;
+      console.log(str);
+      app.conn.send(str);
+    }
+  },
+  template: '#agent-template'
+});
+
+Vue.component('connection', {
+  props: {connection: Object},
+  template: '#connection-template'
+});
+
+var app = new Vue({
+  el: '#app',
+  conn: null,
+  data: {
+    calls: {},
+    agents: {},
+    connections: {}
+  },
+  mounted: function() {
+    this.conn = new WebSocket('ws://callcenter.local:8080/callcenter');
+
+    this.conn.onmessage = function (e) {
+        console.log(e.data);
+
+        let lines = e.data.split("\n");
+
+        lines.forEach(function (val, index) {
+            this.updateUI(val);
+        }, app)
+    };
+
+    this.conn.onopen = function (e) {
+        this.send('HELLO');
+    };
+  },
+  methods: {
+    addOrUpdateCall(call) {
+      console.log(call);
+      if (call.status == 'HANGUP') {
+          this.$delete(this.calls, call.id);
+          // connection has same Id as call
+          this.$delete(this.connections, call.id);
+      } else {
+        this.$set(this.calls, call.id, call);
+      }
+    },
+    addOrUpdateAgent(agent) {
+      console.log(agent);
+      if (agent.status == 'LOGGEDOUT') {
+        this.$delete(this.agents, agent.id);
+      } else {
+        this.$set(this.agents, agent.id, agent);
+      }
+    },
+    addOrUpdateConnection(connection) {
+      this.$set(this.connections, connection.id, connection);
+    },
+    updateUI(msg) {
+        let parts = msg.split(":");
+        let event = parts[0];
+
+        switch (event) {
+            case 'AGENT':
+                this.handleAgentUI(event, parts[1]);
+                break;
+            case 'CALLER':
+            case 'CALLERHANGUP':
+            case 'CALLERJOIN':
+                this.handleCallerUI(event, parts[1]);
+                break;
+            case 'CONNECT':
+                this.handleConnectUI(event, parts[1], parts[2]);
+                break;
+            default:
+                break;
+        }
+    },
+    handleCallerUI(event, callerinfo) {
+        let parts = callerinfo.split("|");
+        let callerid = parts[0];
+        let status = parts[1];
+
+        let queue = "";
+
+        if (parts.length >= 3) {
+          queue = parts[2];
+        }
+
+        this.addOrUpdateCall({
+          id: callerid,
+          status: status,
+          queue: queue
+        });
+    },
+    handleAgentUI(event, agentinfo) {
+        let parts = agentinfo.split("|");
+
+        let agentid = parts[0];
+        let status = parts[1];
+
+        this.addOrUpdateAgent({
+          id: agentid,
+          status: status
+        });
+    },
+    handleConnectUI(event, agentinfo, callinfo) {
+        let agentparts = agentinfo.split("|");
+        let callparts = callinfo.split("|");
+
+        let agent = {
+          id: agentparts[0],
+          status: agentparts[1]
+        };
+
+        let queue = "";
+
+        if (callparts.length >= 3) {
+          queue = callparts[2];
+        }
+
+        let caller = {
+            id: callparts[0],
+            status: callparts[1],
+            queue: queue
+        };
+
+        this.addOrUpdateConnection({
+            id: caller.id,
+            agent: agent,
+            call: caller
+        });
+    }
+  }
+});
+
+</script>
+
+</body>
+</html>

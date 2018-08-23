@@ -3,4 +3,5 @@ log/*.log
 .idea
 ansible/*.retry
 report.csv
+.env
 

@@ -18,11 +18,6 @@ class Caller
     /**
      * @var string
      */
-    public $hash;
-
-    /**
-     * @var string
-     */
     public $queue = '';
 
     /**
@@ -44,8 +39,6 @@ class Caller
     {
         $this->callerid = $callerid;
         $this->uid = $uid;
-
-        $this->hash = sha1($callerid.$uid);
 
         $this->time = time();
     }
@@ -106,10 +99,12 @@ class Caller
      */
     public function __toString() : string
     {
-        $str = (($this->callerid)?:"anonymous")."|{$this->status}|{$this->hash}";
+        $str = (($this->callerid)?:"anonymous")."|{$this->status}";
+        
         if ($this->queue) {
             $str .= "|{$this->queue}";
         }
+        
         return $str;
     }
 

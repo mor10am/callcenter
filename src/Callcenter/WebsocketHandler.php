@@ -53,10 +53,10 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
             case 'HELLO':
                 $this->emit('websocket.hello', [$from]);
                 break;
-            case 'TOGGLE':
+            case 'PAUSE':
                 $agentid = $parts[1];
 
-                $this->emit('websocket.toggle', [$from, $agentid]);
+                $this->emit('websocket.pause', [$from, $agentid]);
                 break;
             case 'AVAIL':
                 $agentid = $parts[1];

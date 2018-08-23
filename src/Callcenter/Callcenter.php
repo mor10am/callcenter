@@ -95,24 +95,34 @@ class Callcenter
     /**
      * @param ConnectionInterface $conn
      * @param string $agentid
-     * @param string $force
      */
-    public function websocketToggleAvail(ConnectionInterface $conn, string $agentid, string $force = "") : void
+    public function websocketSetAgentAvail(ConnectionInterface $conn, string $agentid) : void
     {
         if (!isset($this->agents[$agentid])) {
-            return;
+            $this->agents[$agentid] = new \Callcenter\Model\Agent($agentid);
         }
 
         $agent = $this->agents[$agentid];
-        $current_status = $agent->status;
 
-        if ($current_status == 'PAUSED' or $force == 'AVAIL') {
-            $this->ami->unpauseAgent($agentid);
-            $this->setAgentStatus($agent, 'AVAIL');
-        } elseif ($current_status == 'AVAIL' or $force == 'PAUSED') {
-            $this->ami->pauseAgent($agentid);
-            $this->setAgentStatus($agent, 'PAUSED');
+        $this->ami->unpauseAgent($agentid);
+        $this->setAgentStatus($agent, 'AVAIL');
+    }
+
+    /**
+     * @param ConnectionInterface $conn
+     * @param string $agentid
+     * @param string $force
+     */
+    public function websocketSetAgentPause(ConnectionInterface $conn, string $agentid) : void
+    {
+        if (!isset($this->agents[$agentid])) {
+            $this->agents[$agentid] = new \Callcenter\Model\Agent($agentid);
         }
+
+        $agent = $this->agents[$agentid];
+
+        $this->ami->pauseAgent($agentid);
+        $this->setAgentStatus($agent, 'PAUSED');
     }
 
     /**
@@ -140,22 +150,6 @@ class Callcenter
         }
 
         return $this->callers[$uid];
-    }
-
-    /**
-     * @param ConnectionInterface $conn
-     * @param string $agentid
-     */
-    public function websocketSetAgentAvail(ConnectionInterface $conn, string $agentid) : void
-    {
-        if (!isset($this->agents[$agentid])) {
-            $this->agents[$agentid] = new \Callcenter\Model\Agent($agentid);
-        }
-
-        $agent = $this->agents[$agentid];
-
-        $this->ami->unpauseAgent($agentid);
-        $this->setAgentStatus($agent, 'AVAIL');
     }
 
     /**
@@ -229,6 +223,7 @@ class Callcenter
 
         if (isset($this->connections[$caller->uid])) {
             $agent = $this->connections[$caller->uid]->agent;
+            $this->ami->unpauseAgent($agent->getAgentId());
             $this->setAgentStatus($agent, 'AVAIL');
             unset($this->connections[$caller->uid]);
         }
