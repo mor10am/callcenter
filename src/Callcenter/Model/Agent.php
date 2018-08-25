@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Callcenter\Model;
 
-class Agent
+class Agent implements \JsonSerializable
 {
     /**
      * @var string
@@ -103,6 +103,19 @@ class Agent
     public function __toString() : string
     {
         return "{$this->agentid}|{$this->status}";
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->agentid,
+            'status' => $this->status,
+            'queue' => $this->queue,
+            'time' => $this->time,
+        ];
     }
 
     /**

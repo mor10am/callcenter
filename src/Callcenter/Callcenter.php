@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Callcenter;
 
 use Callcenter\Model\Agent;
-use Callcenter\Model\Caller;
+use Callcenter\Model\Call;
 use Callcenter\Model\Connection;
 use Psr\Log\LoggerInterface;
 use Ratchet\ConnectionInterface;
@@ -41,7 +41,7 @@ class Callcenter
     /**
      * @var array
      */
-    private $callers = [];
+    private $calls = [];
 
     /**
      * Connections of agent and call
@@ -76,15 +76,15 @@ class Callcenter
         $str = "";
 
         foreach ($this->agents as $agent) {
-            $str .= "AGENT:{$agent}\n";
+            $str .= "AGENT|".json_encode($agent)."\n";
         }
 
-        foreach ($this->callers as $caller) {
-            $str .= "CALLER:{$caller}\n";
+        foreach ($this->calls as $call) {
+            $str .= "CALL|".json_encode($call)."\n";
         }
 
-        foreach ($this->connections as $conn) {
-            $str .= "CONNECT:{$conn}\n";
+        foreach ($this->connections as $connection) {
+            $str .= "CONNECT|".json_encode($connection)."\n";
         }
 
         $this->logger->debug("TO UI: ".$str);
@@ -141,15 +141,15 @@ class Callcenter
     /**
      * @param string $callerid
      * @param string $uid
-     * @return Caller
+     * @return Call
      */
-    public function getOrCreateCaller(string $callerid, string $uid) : Caller
+    public function getOrCreateCall(string $callerid, string $uid) : Call
     {
-        if (!isset($this->callers[$uid])) {
-            $this->callers[$uid] = new Caller($callerid, $uid);
+        if (!isset($this->calls[$uid])) {
+            $this->calls[$uid] = new Call($callerid, $uid);
         }
 
-        return $this->callers[$uid];
+        return $this->calls[$uid];
     }
 
     /**
@@ -200,38 +200,41 @@ class Callcenter
      * @param string $callerid
      * @param string $uid
      */
-    public function callerNew(string $callerid, string $uid) : void
+    public function callNew(string $callerid, string $uid) : void
     {
-        $caller = $this->getOrCreateCaller($callerid, $uid);
+        $call = $this->getOrCreateCall($callerid, $uid);
 
-        $this->websocket->sendtoAll("CALLER:{$caller}");
+        $this->websocket->sendtoAll("CALL|".json_encode($call));
 
-        $this->logger->info("Caller {$caller} is in the IVR");
+        $this->logger->info("Call {$call} is in the IVR");
     }
 
     /**
      * @param string $callerid
      * @param string $uid
      */
-    public function callerHangup(string $callerid, string $uid) : void
+    public function callHangup(string $callerid, string $uid) : void
     {
-        $caller = $this->getOrCreateCaller($callerid, $uid);
+        $call = $this->getOrCreateCall($callerid, $uid);
 
-        $this->setCallerStatus($caller, 'HANGUP');
+        $this->setCallStatus($call, 'HANGUP');
 
-        unset($this->callers[$caller->uid]);
+        unset($this->calls[$call->uid]);
 
-        if (isset($this->connections[$caller->uid])) {
-            $agent = $this->connections[$caller->uid]->agent;
+        if (isset($this->connections[$call->uid])) {
+            $agent = $this->connections[$call->uid]->agent;
             $this->ami->unpauseAgent($agent->getAgentId());
             $this->setAgentStatus($agent, 'AVAIL');
-            unset($this->connections[$caller->uid]);
+            unset($this->connections[$call->uid]);
         }
 
 
-        $this->websocket->sendtoAll("CALLERHANGUP:{$caller}");
+        $this->websocket->sendtoAll(
+            "AGENT|".json_encode($agent)."\n".
+            "CALL|".json_encode($call)
+        );
 
-        $this->logger->info("Caller {$caller} hung up");
+        $this->logger->info("Call {$call} hung up");
     }
 
     /**
@@ -239,16 +242,16 @@ class Callcenter
      * @param string $uid
      * @param string $queue
      */
-    public function callerQueued(string $callerid, string $uid, string $queue) : void
+    public function callQueued(string $callerid, string $uid, string $queue) : void
     {
-        $caller = $this->getOrCreateCaller($callerid, $uid);
+        $call = $this->getOrCreateCall($callerid, $uid);
 
-        $caller->setQueue($queue);
-        $this->setCallerStatus($caller, 'QUEUED');
+        $call->setQueue($queue);
+        $this->setCallStatus($call, 'QUEUED');
 
-        $this->websocket->sendtoAll("CALLERJOIN:{$caller}");
+        $this->websocket->sendtoAll("CALL|".json_encode($call));
 
-        $this->logger->info("Caller {$caller} was queued in queue {$caller->queue}");
+        $this->logger->info("Call {$call} was queued in queue {$call->queue}");
     }
 
     /**
@@ -256,39 +259,45 @@ class Callcenter
      * @param string $callerid
      * @param string $uid
      */
-    public function callerAndAgentConnected(string $agentid, string $callerid, string $uid) : void
+    public function callAndAgentConnected(string $agentid, string $callerid, string $uid) : void
     {
-        if (!isset($this->agents[$agentid]) or !isset($this->callers[$uid])) {
+        if (!isset($this->agents[$agentid]) or !isset($this->calls[$uid])) {
             return;
         }
 
         $agent = $this->agents[$agentid];
-        $caller = $this->callers[$uid];
+        $call = $this->calls[$uid];
 
         if (!isset($this->connections[$uid])) {
-            $agent->setQueue($caller->getQueue());
+            $agent->setQueue($call->getQueue());
             $this->setAgentStatus($agent, 'INCALL');
-            $this->setCallerStatus($caller, 'INCALL');
+            $this->setCallStatus($call, 'INCALL');
 
-            $conn = new Connection($caller, $agent);
-            $this->websocket->sendtoAll("CONNECT:{$conn}");
+            $conn = new Connection($call, $agent);
+
+            $this->websocket->sendtoAll(
+                "AGENT|".json_encode($agent)."\n".
+                "CALL|".json_encode($call)."\n".
+                "CONNECT|".json_encode($conn)
+            );
+
             $this->connections[$uid] = $conn;
 
-            $this->logger->info("Caller {$caller} was connected to agent {$agent}");
+            $this->logger->info("Call {$call} was connected to agent {$agent}");
         }
     }
 
     /**
-     * Set status on Caller and notify UI
+     * Set status on Call and notify UI
      *
-     * @param Caller $caller
+     * @param Call $call
      * @param string $status
      */
-    private function setCallerStatus(Caller $caller, string $status) : void
+    private function setCallStatus(Call $call, string $status) : void
     {
-        $report = $caller->getReportLine();
+        $report = $call->getReportLine();
 
-        if ($caller->setStatus($status)) {
+        if ($call->setStatus($status)) {
             file_put_contents(
                 $this->settings['report'],
                 $report."\n",
@@ -315,7 +324,7 @@ class Callcenter
             );
         }
 
-        $this->websocket->sendtoAll("AGENT:{$agent}");
+        $this->websocket->sendtoAll("AGENT|".json_encode($agent));
 
         $this->logger->info("Agent {$agent}");
     }

@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<div class="container">
+<div class="container-fluid">
     <div id="app">
       <div class="row">
           <div class="col-sm">
@@ -35,6 +35,7 @@
   <div class="row">
     <div class="col-sm">
       <div class="alert alert-info">{{ agent.id }} {{ agent.status }}
+        <span v.if="agent.status==='INCALL'" class="badge badge-secondary">{{ agent.queue }}</span>
         <button
           class="btn btn-sm btn-info"
           v-if="calcNextStatus != ''"
@@ -47,10 +48,10 @@
   </div>
 </script>
 
-<script type="text/x-template" id="caller-template">
+<script type="text/x-template" id="call-template">
   <div class="row">
     <div class="col-sm">
-      <div class="alert alert-info">{{ call.id }} <span class="badge badge-secondary">{{ call.queue }}</span></div>
+      <div class="alert alert-info">{{ call.callerid }} {{ call.status }}<span class="badge badge-secondary">{{ call.queue }}</span></div>
     </div>
   </div>
 </script>
@@ -58,7 +59,10 @@
 <script type="text/x-template" id="connection-template">
   <div class="row">
     <div class="col-sm">
-      <div class="alert alert-success">Call {{ connection.call.id }} with agent {{ connection.agent.id }}</div>
+      <div class="alert alert-success">
+          Call: {{ connection.call.callerid }} Agent: {{ connection.agent.id }}
+          <span class="badge badge-secondary">{{ connection.queue }}</span>
+      </div>
     </div>
   </div>
 </script>
@@ -69,7 +73,7 @@ Vue.component('call', {
   props: {
     call: Object
   },
-  template: '#caller-template'
+  template: '#call-template'
 });
 
 Vue.component('agent', {
@@ -93,7 +97,6 @@ Vue.component('agent', {
   methods: {
     setStatus: function(event) {
       let str = event.target.value+':'+this.agent.id;
-      console.log(str);
       app.conn.send(str);
     }
   },
@@ -153,79 +156,21 @@ var app = new Vue({
       this.$set(this.connections, connection.id, connection);
     },
     updateUI(msg) {
-        let parts = msg.split(":");
-        let event = parts[0];
+        let parts = msg.split("|");
 
-        switch (event) {
+        switch (parts[0]) {
             case 'AGENT':
-                this.handleAgentUI(event, parts[1]);
+                this.addOrUpdateAgent(JSON.parse(parts[1]));
                 break;
-            case 'CALLER':
-            case 'CALLERHANGUP':
-            case 'CALLERJOIN':
-                this.handleCallerUI(event, parts[1]);
+            case 'CALL':
+                this.addOrUpdateCall(JSON.parse(parts[1]));
                 break;
             case 'CONNECT':
-                this.handleConnectUI(event, parts[1], parts[2]);
+                this.addOrUpdateConnection(JSON.parse(parts[1]));
                 break;
             default:
                 break;
         }
-    },
-    handleCallerUI(event, callerinfo) {
-        let parts = callerinfo.split("|");
-        let callerid = parts[0];
-        let status = parts[1];
-
-        let queue = "";
-
-        if (parts.length >= 3) {
-          queue = parts[2];
-        }
-
-        this.addOrUpdateCall({
-          id: callerid,
-          status: status,
-          queue: queue
-        });
-    },
-    handleAgentUI(event, agentinfo) {
-        let parts = agentinfo.split("|");
-
-        let agentid = parts[0];
-        let status = parts[1];
-
-        this.addOrUpdateAgent({
-          id: agentid,
-          status: status
-        });
-    },
-    handleConnectUI(event, agentinfo, callinfo) {
-        let agentparts = agentinfo.split("|");
-        let callparts = callinfo.split("|");
-
-        let agent = {
-          id: agentparts[0],
-          status: agentparts[1]
-        };
-
-        let queue = "";
-
-        if (callparts.length >= 3) {
-          queue = callparts[2];
-        }
-
-        let caller = {
-            id: callparts[0],
-            status: callparts[1],
-            queue: queue
-        };
-
-        this.addOrUpdateConnection({
-            id: caller.id,
-            agent: agent,
-            call: caller
-        });
     }
   }
 });

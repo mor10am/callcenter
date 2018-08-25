@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Callcenter\Model;
 
-class Caller
+class Call implements \JsonSerializable
 {
     /**
      * @var string
@@ -109,6 +109,20 @@ class Caller
     }
 
     /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->uid,
+            'callerid' => $this->callerid,
+            'status' => $this->status,
+            'queue' => $this->queue,
+            'time' => $this->time,
+        ];
+    }
+
+    /**
      * @return string
      */
     public function getReportLine() : string
@@ -118,6 +132,6 @@ class Caller
         $duration = $ts - $this->time;
         $at = $ts - $duration;
 
-        return date('Y-m-d H:i:s', $at).";CALLER;{$this->callerid};{$this->status};$duration;{$this->queue}";
+        return date('Y-m-d H:i:s', $at).";CALL;{$this->callerid};{$this->status};$duration;{$this->queue}";
     }
 }

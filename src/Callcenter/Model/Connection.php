@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Callcenter\Model;
 
-class Connection
+class Connection implements \JsonSerializable
 {
     /**
      @var \Callcenter\Model\Agent
@@ -11,9 +11,9 @@ class Connection
     public $agent;
 
     /**
-     * @var \Callcenter\Model\Caller
+     * @var \Callcenter\Model\Call
      */
-    public $caller;
+    public $call;
 
     /**
      * @var int
@@ -22,12 +22,12 @@ class Connection
 
     /**
      * Bridge constructor.
-     * @param \Callcenter\Model\Caller $caller
+     * @param \Callcenter\Model\Call $call
      * @param \Callcenter\Model\Agent $agent
      */
-    public function __construct(Caller $caller, Agent $agent)
+    public function __construct(Call $call, Agent $agent)
     {
-        $this->caller = $caller;
+        $this->call = $call;
         $this->agent = $agent;
 
         $this->time = time();
@@ -38,6 +38,21 @@ class Connection
      */
     public function __toString() : string
     {
-        return "{$this->agent}:{$this->caller}";
+        return "{$this->agent}:{$this->call}";
     }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'id' => $this->call->uid,
+            'queue' => $this->call->queue,
+            'time' => $this->time,
+            'agent' => $this->agent,
+            'call' => $this->call,
+        ];
+    }
+
 }
