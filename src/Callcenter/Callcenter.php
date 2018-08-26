@@ -87,9 +87,11 @@ class Callcenter
             $str .= "CONNECT|".json_encode($connection)."\n";
         }
 
-        $this->logger->debug("TO UI: ".$str);
+        if ($str) {
+            $this->logger->debug("TO UI: ".$str);
 
-        $conn->send($str);
+            $conn->send($str);
+        }
     }
 
     /**
