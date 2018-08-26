@@ -221,6 +221,8 @@ class Callcenter
 
         unset($this->calls[$call->uid]);
 
+        $agent = null;
+
         if (isset($this->connections[$call->uid])) {
             $agent = $this->connections[$call->uid]->agent;
             $this->ami->unpauseAgent($agent->getAgentId());
@@ -228,11 +230,13 @@ class Callcenter
             unset($this->connections[$call->uid]);
         }
 
+        $str = "CALL|".json_encode($call);
 
-        $this->websocket->sendtoAll(
-            "AGENT|".json_encode($agent)."\n".
-            "CALL|".json_encode($call)
-        );
+        if ($agent) {
+            $str .= "\nAGENT|".json_encode($agent);
+        }
+
+        $this->websocket->sendtoAll($str);
 
         $this->logger->info("Call {$call} hung up");
     }
