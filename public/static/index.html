@@ -125,7 +125,9 @@ var app = new Vue({
         let lines = e.data.split("\n");
 
         lines.forEach(function (val, index) {
-            this.updateUI(val);
+            if (val.length) {
+                this.updateUI(val);
+            }
         }, app)
     };
 
@@ -158,15 +160,23 @@ var app = new Vue({
     updateUI(msg) {
         let parts = msg.split("|");
 
-        switch (parts[0]) {
+        let type = parts[0];
+
+        if (!parts[1]) return;
+
+        let obj = JSON.parse(parts[1]);
+
+        if (!obj) return;
+
+        switch (type) {
             case 'AGENT':
-                this.addOrUpdateAgent(JSON.parse(parts[1]));
+                this.addOrUpdateAgent(obj);
                 break;
             case 'CALL':
-                this.addOrUpdateCall(JSON.parse(parts[1]));
+                this.addOrUpdateCall(obj);
                 break;
             case 'CONNECT':
-                this.addOrUpdateConnection(JSON.parse(parts[1]));
+                this.addOrUpdateConnection(obj);
                 break;
             default:
                 break;
