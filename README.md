@@ -24,11 +24,10 @@ tcpenable=yes
 transport=tcp,udp
 autocreatepeer=yes
 
-[caller]
+[phones]
 type=friend
 host=dynamic
 port=5060
-nat=yes
 sipreinvite=no
 transport=tcp,udp
 secret=password
@@ -71,7 +70,7 @@ setqueuevar=yes
 
 timeout = 60
 retry = 10
-wrapuptime=30
+wrapuptime=15
 
 autopause=yes
 
