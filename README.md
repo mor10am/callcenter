@@ -12,6 +12,8 @@ and create a Websocket server on tcp://callcenter.local:8080/callcenter
 The webpage dashboard is served by builtin Asterisk HTTP server
 at http://callcenter.local:8088
 
+```callcenter.local``` is added to ```/etc/hosts```
+
 The webpage will connect to the websocket server and on connection
 get the current state of the the backend server process.
 
