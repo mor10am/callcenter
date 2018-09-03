@@ -19,18 +19,12 @@ if ($env == 'production') {
     }
 }
 
-$options = [
-    'member_template' => getenv('AMI_MEMBER_TEMPLATE'),
-];
-
 $logger = new Monolog\Logger('callcenter');
 $logger->pushHandler(new Monolog\Handler\StreamHandler('log/callcenter.log'));
 
 $loop = React\EventLoop\Factory::create();
 
 $websockethandler = new \Callcenter\WebsocketHandler($logger);
-
-$logger->debug("Starting websocket at ".getenv('WSSERVERADDRESS').":".getenv('WSSERVERPORT'));
 
 $app = new Ratchet\App(
   getenv('WSSERVERADDRESS'),
@@ -45,20 +39,24 @@ $app->route(
     ['*']
 );
 
-try {
-  $logger->debug("Connecting to Asterisk at " . getenv('ASTERISKSERVER'));
+$logger->debug("Started websocket at ".getenv('WSSERVERADDRESS').":".getenv('WSSERVERPORT'));
 
-  $ami = new \React\Stream\DuplexResourceStream(
-      stream_socket_client(getenv('ASTERISKSERVER')),
-      $loop
-  );
+try {
+    $logger->debug("Connecting to Asterisk at " . getenv('ASTERISKSERVER'));
+
+    $ami = new \React\Stream\DuplexResourceStream(
+        stream_socket_client(getenv('ASTERISKSERVER')),
+        $loop
+    );
 } catch (\Exception $e) {
-  die($e->getMessage());
+    die($e->getMessage());
 }
 
 $asteriskmanager = new Callcenter\AsteriskManager(
     $ami,
-    $options
+    [
+        'member_template' => getenv('AMI_MEMBER_TEMPLATE'),
+    ]
 );
 
 $asteriskmanager->setLogger($logger);
