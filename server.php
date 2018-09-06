@@ -83,6 +83,8 @@ $websockethandler->on('websocket.pause', [$callcenter, 'websocketSetAgentPause']
 
 $asteriskmanager->on('agent.loggedin', [$callcenter, 'agentLoggedIn']);
 $asteriskmanager->on('agent.loggedout', [$callcenter, 'agentLoggedOut']);
+$asteriskmanager->on('agent.paused', [$callcenter, 'agentPaused']);
+$asteriskmanager->on('agent.avail', [$callcenter, 'agentAvail']);
 
 $asteriskmanager->on('caller.new', [$callcenter, 'callNew']);
 $asteriskmanager->on('caller.hangup', [$callcenter, 'callHangup']);
@@ -90,6 +92,6 @@ $asteriskmanager->on('caller.queued', [$callcenter, 'callQueued']);
 
 $asteriskmanager->on('queue.connect', [$callcenter, 'callAndAgentConnected']);
 
-$logger->info("Callcenter started.");
+$logger->info("Callcenter v".\Callcenter\Callcenter::VERSION." started.");
 
 $app->run();

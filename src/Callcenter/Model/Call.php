@@ -114,6 +114,7 @@ class Call implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
+            'type' => 'CALL',
             'id' => $this->uid,
             'callerid' => $this->callerid,
             'status' => $this->status,

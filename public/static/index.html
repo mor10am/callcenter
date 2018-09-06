@@ -137,7 +137,6 @@ var app = new Vue({
   },
   methods: {
     addOrUpdateCall(call) {
-      console.log(call);
       if (call.status == 'HANGUP') {
           this.$delete(this.calls, call.id);
           // connection has same Id as call
@@ -147,7 +146,6 @@ var app = new Vue({
       }
     },
     addOrUpdateAgent(agent) {
-      console.log(agent);
       if (agent.status == 'LOGGEDOUT') {
         this.$delete(this.agents, agent.id);
       } else {
@@ -158,17 +156,12 @@ var app = new Vue({
       this.$set(this.connections, connection.id, connection);
     },
     updateUI(msg) {
-        let parts = msg.split("|");
 
-        let type = parts[0];
-
-        if (!parts[1]) return;
-
-        let obj = JSON.parse(parts[1]);
+        let obj = JSON.parse(msg);
 
         if (!obj) return;
 
-        switch (type) {
+        switch (obj.type) {
             case 'AGENT':
                 this.addOrUpdateAgent(obj);
                 break;
@@ -179,6 +172,7 @@ var app = new Vue({
                 this.addOrUpdateConnection(obj);
                 break;
             default:
+                console.log(obj.type);
                 break;
         }
     }

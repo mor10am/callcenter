@@ -6,7 +6,12 @@ namespace Callcenter\Model;
 class Connection implements \JsonSerializable
 {
     /**
-     @var \Callcenter\Model\Agent
+     * @var int
+     */
+    public $id;
+
+    /**
+     * @var \Callcenter\Model\Agent
      */
     public $agent;
 
@@ -27,6 +32,7 @@ class Connection implements \JsonSerializable
      */
     public function __construct(Call $call, Agent $agent)
     {
+        $this->id = $call->uid;
         $this->call = $call;
         $this->agent = $agent;
 
@@ -47,7 +53,8 @@ class Connection implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
-            'id' => $this->call->uid,
+            'type' => 'CONNECT',
+            'id' => $this->id,
             'queue' => $this->call->queue,
             'time' => $this->time,
             'agent' => $this->agent,

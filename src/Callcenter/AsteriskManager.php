@@ -184,9 +184,14 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
         if ($agentid and $callerid) {
             $this->emit('queue.connect', [
-                $agentid,
-                $callerid,
-                $uid,
+                new CallCenterEvent(
+                    'queue.connect',
+                    [
+                        'agentid' => $agentid,
+                        'callerid' => $callerid,
+                        'calleruid' => $uid,
+                    ]
+                )
             ]);
         }
     }
@@ -197,9 +202,14 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     protected function handleCallerEnterQueue(QueueCallerJoinEvent $event) : void
     {
         $this->emit('caller.queued', [
-            $event->getKey('calleridnum'),
-            $event->getKey('uniqueid'),
-            $event->getKey('queue'),
+            new CallCenterEvent(
+                'called.queued',
+                [
+                    'callerid' => $event->getKey('calleridnum'),
+                    'uid' => $event->getKey('uniqueid'),
+                    'queue' => $event->getKey('queue'),
+                ]
+            )
         ]);
     }
 
@@ -210,8 +220,16 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     {
         $agentstatus = strtolower(($event->getKey("paused") == 1)?"PAUSED":"AVAIL");
 
-        $this->emit("agent.{$agentstatus}", [
-            $event->getKey('calleridnum')
+        $type = "agent.{$agentstatus}";
+
+        $this->emit($type, [
+            new CallCenterEvent(
+                $type,
+                [
+                    'agentid' => $event->getKey('calleridnum'),
+                    'uid' => $event->getKey('uniqueid'),
+                ]
+            )
         ]);
     }
 
@@ -221,7 +239,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     protected function handleAgentLogout(UserEventEvent $event) : void
     {
         $this->emit('agent.loggedout', [
-            $event->getKey('calleridnum')
+            new CallCenterEvent(
+                'agent.loggedout',
+                [
+                    'agentid' => $event->getKey('calleridnum'),
+                    'uid' => $event->getKey('uniqueid'),
+                ]
+            )
         ]);
     }
 
@@ -231,7 +255,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     protected function handleAgentLogin(UserEventEvent $event) : void
     {
         $this->emit('agent.loggedin', [
-            $event->getKey('calleridnum')
+            new CallCenterEvent(
+                'agent.loggedin',
+                [
+                    'agentid' => $event->getKey('calleridnum'),
+                    'uid' => $event->getKey('uniqueid'),
+                ]
+            )
         ]);
     }
 
@@ -241,8 +271,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     protected function handleHangupCaller(UserEventEvent $event) : void
     {
         $this->emit('caller.hangup', [
-            $event->getKey('calleridnum'),
-            $event->getKey('uniqueid')
+            new CallCenterEvent(
+                'caller.hangup',
+                [
+                    'callerid' => $event->getKey('calleridnum'),
+                    'uid' => $event->getKey('uniqueid')
+                ]
+            )
         ]);
     }
 
@@ -252,8 +287,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     protected function handleNewCaller(UserEventEvent $event) : void
     {
         $this->emit('caller.new', [
-            $event->getKey('calleridnum'),
-            $event->getKey('uniqueid')
+            new CallCenterEvent(
+                'caller.new',
+                [
+                    'callerid' => $event->getKey('calleridnum'),
+                    'uid' => $event->getKey('uniqueid')
+                ]
+            )
         ]);        
     }
 

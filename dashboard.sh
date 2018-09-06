@@ -1,3 +1,3 @@
 #!/bin/sh
 
-google-chrome public/static/index.html
+nohup google-chrome public/static/index.html &

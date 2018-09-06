@@ -26,7 +26,7 @@ class Agent implements \JsonSerializable
     public $time;
 
     /**
-     * Agent constructor.
+     *
      * @param string $agentid
      */
     public function __construct(string $agentid)
@@ -111,7 +111,8 @@ class Agent implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
-            'id' => $this->agentid,
+            'type' => 'AGENT',
+            'agentid' => $this->agentid,
             'status' => $this->status,
             'queue' => $this->queue,
             'time' => $this->time,

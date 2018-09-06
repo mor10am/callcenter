@@ -51,17 +51,45 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
 
         switch ($cmd) {
             case 'HELLO':
-                $this->emit('websocket.hello', [$from]);
+                $this->emit(
+                    'websocket.hello', [
+                        new CallCenterEvent(
+                            'websocket.hello',
+                            [
+                                'connection' => $from
+                            ]
+                        )
+                    ]
+                );
                 break;
             case 'PAUSE':
                 $agentid = $parts[1];
 
-                $this->emit('websocket.pause', [$from, $agentid]);
+                $this->emit(
+                    'websocket.pause', [
+                        new CallCenterEvent(
+                            'websocket.pause',
+                            [
+                                'connection' => $from,
+                                'agentid' => $agentid
+                            ]
+                        )
+                    ]
+                );
                 break;
             case 'AVAIL':
                 $agentid = $parts[1];
 
-                $this->emit('websocket.avail', [$from, $agentid]);
+                $this->emit('websocket.avail', [
+                        new CallCenterEvent(
+                            'websocket.avail',
+                            [
+                                'connection' => $from,
+                                'agentid' => $agentid
+                            ]
+                        )
+                    ]
+                );
                 break;
             default:
                 echo "Unknown msg: {$msg}\n";
