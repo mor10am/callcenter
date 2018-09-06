@@ -4,4 +4,5 @@ log/*.log
 ansible/*.retry
 report.csv
 .env
+nohup.out
 
