@@ -141,7 +141,6 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             case "UserEvent":
                 $this->handleUserEvent($event);
                 break;
-            case "QueueMemberPause":
             case "QueueMemberPaused":
                 $this->handleAgentPause($event);
                 break;
