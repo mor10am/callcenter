@@ -115,6 +115,12 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         });
     }
 
+    /**
+     * Log in to Asterisk Manager Interface
+     *
+     * @param $username
+     * @param $password
+     */
     public function login($username, $password)
     {
         $this->send(
@@ -155,6 +161,9 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         }
     }
 
+    /**
+     * @param UserEventEvent $event
+     */
     protected function handleUserEvent(UserEventEvent $event)
     {
         switch ($event->getUserEventName()) {
