@@ -101,6 +101,9 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
      */
     public function sendtoAll(string $msg) : void
     {
+        /**
+         * @var ConnectionInterface $client
+         */
         foreach ($this->clients as $client) {
             $client->send($msg);
         }

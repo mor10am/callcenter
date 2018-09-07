@@ -118,8 +118,8 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     /**
      * Log in to Asterisk Manager Interface
      *
-     * @param $username
-     * @param $password
+     * @param string $username
+     * @param string $password
      */
     public function login($username, $password)
     {
