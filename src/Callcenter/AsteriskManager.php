@@ -142,6 +142,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
                 $this->handleUserEvent($event);
                 break;
             case "QueueMemberPause":
+            case "QueueMemberPaused":
                 $this->handleAgentPause($event);
                 break;
             case "QueueCallerJoin":
@@ -203,7 +204,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     {
         $this->emit('caller.queued', [
             new CallCenterEvent(
-                'called.queued',
+                'caller.queued',
                 [
                     'callerid' => $event->getKey('calleridnum'),
                     'uid' => $event->getKey('uniqueid'),
@@ -226,7 +227,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             new CallCenterEvent(
                 $type,
                 [
-                    'agentid' => $event->getKey('calleridnum'),
+                    'agentid' => $event->getKey('membername'),
                     'uid' => $event->getKey('uniqueid'),
                 ]
             )

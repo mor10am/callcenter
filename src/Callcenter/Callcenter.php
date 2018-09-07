@@ -47,7 +47,7 @@ class Callcenter
      * Connections of agent and call
      * @var array
      */
-    private $connections = [];
+    private $agentcallconnections = [];
 
     const VERSION = 1.1;
 
@@ -76,7 +76,7 @@ class Callcenter
     public function websocketHello(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'websocket.hello') {
-            throw new \InvalidArgumentException("This method expects a websocket.hello event");
+            throw new \InvalidArgumentException("This method expects a websocket.hello event. [".$event->getType()."]");
         }
 
         $str = "";
@@ -89,14 +89,14 @@ class Callcenter
             $str .= json_encode($call)."\n";
         }
 
-        foreach ($this->connections as $connection) {
+        foreach ($this->agentcallconnections as $connection) {
             $str .= json_encode($connection)."\n";
         }
 
         if ($str) {
             $this->logger->debug("TO UI: ".$str);
 
-            $event->connection->send($str);
+            $event->wsconnection->send($str);
         }
     }
 
@@ -106,17 +106,14 @@ class Callcenter
     public function websocketSetAgentAvail(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'websocket.avail') {
-            throw new \InvalidArgumentException("This method expects a websocket.avail event");
+            throw new \InvalidArgumentException("This method expects a websocket.avail event. [".$event->getType()."]");
         }
 
         if (!isset($this->agents[$event->agentid])) {
             $this->agents[$event->agentid] = new \Callcenter\Model\Agent($event->agentid);
         }
 
-        //$agent = $this->agents[$agentid];
-
         $this->ami->unpauseAgent($event->agentid);
-        //$this->setAgentStatus($agent, 'AVAIL');
     }
 
     /**
@@ -125,17 +122,14 @@ class Callcenter
     public function websocketSetAgentPause(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'websocket.pause') {
-            throw new \InvalidArgumentException("This method expects a websocket.pause event");
+            throw new \InvalidArgumentException("This method expects a websocket.pause event. [".$event->getType()."]");
         }
 
         if (!isset($this->agents[$event->agentid])) {
             $this->agents[$event->agentid] = new \Callcenter\Model\Agent($event->agentid);
         }
 
-        //$agent = $this->agents[$event->agentid];
-
         $this->ami->pauseAgent($event->agentid);
-        //$this->setAgentStatus($agent, 'PAUSED');
     }
 
     /**
@@ -171,7 +165,7 @@ class Callcenter
     public function agentLoggedIn(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'agent.loggedin') {
-            throw new \InvalidArgumentException("This method expects a agent.loggedin event");
+            throw new \InvalidArgumentException("This method expects a agent.loggedin event. [".$event->getType()."]");
         }
 
         $this->setAgentStatus(
@@ -186,7 +180,7 @@ class Callcenter
     public function agentLoggedOut(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'agent.loggedout') {
-            throw new \InvalidArgumentException("This method expects a agent.loggedout event");
+            throw new \InvalidArgumentException("This method expects a agent.loggedout event. [".$event->getType()."]");
         }
 
         $this->setAgentStatus(
@@ -201,7 +195,7 @@ class Callcenter
     public function agentPaused(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'agent.paused') {
-            throw new \InvalidArgumentException("This method expects a agent.paused event");
+            throw new \InvalidArgumentException("This method expects a agent.paused event. [".$event->getType()."]");
         }
 
         $this->setAgentStatus(
@@ -216,7 +210,7 @@ class Callcenter
     public function agentAvail(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'agent.avail') {
-            throw new \InvalidArgumentException("This method expects a agent.avail event");
+            throw new \InvalidArgumentException("This method expects a agent.avail event. [".$event->getType()."]");
         }
 
         $this->setAgentStatus(
@@ -231,7 +225,7 @@ class Callcenter
     public function callNew(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'caller.new') {
-            throw new \InvalidArgumentException("This method expects a caller.new event");
+            throw new \InvalidArgumentException("This method expects a caller.new event. [".$event->getType()."]");
         }
 
         $call = $this->getOrCreateCall($event->callerid, $event->uid);
@@ -247,7 +241,7 @@ class Callcenter
     public function callHangup(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'caller.hangup') {
-            throw new \InvalidArgumentException("This method expects a caller.hangup event");
+            throw new \InvalidArgumentException("This method expects a caller.hangup event. [".$event->getType()."]");
         }
 
         $call = $this->getOrCreateCall($event->callerid, $event->uid);
@@ -258,11 +252,10 @@ class Callcenter
 
         $agent = null;
 
-        if (isset($this->connections[$call->uid])) {
-            $agent = $this->connections[$call->uid]->agent;
+        if (isset($this->agentcallconnections[$call->uid])) {
+            $agent = $this->agentcallconnections[$call->uid]->agent;
             $this->ami->unpauseAgent($agent->getAgentId());
-            $this->setAgentStatus($agent, 'AVAIL');
-            unset($this->connections[$call->uid]);
+            unset($this->agentcallconnections[$call->uid]);
         }
 
         $str = json_encode($call);
@@ -282,7 +275,7 @@ class Callcenter
     public function callQueued(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'caller.queued') {
-            throw new \InvalidArgumentException("This method expects a caller.queued event");
+            throw new \InvalidArgumentException("This method expects a caller.queued event. [".$event->getType()."]");
         }
 
         $call = $this->getOrCreateCall($event->callerid, $event->uid);
@@ -301,20 +294,22 @@ class Callcenter
     public function callAndAgentConnected(CallCenterEvent $event) : void
     {
         if ($event->getType() != 'queue.connect') {
-            throw new \InvalidArgumentException("This method expects a queue.connect event");
+            throw new \InvalidArgumentException("This method expects a queue.connect event. [".$event->getType()."]");
         }
 
-        if (!isset($this->agents[$event->agentid]) or !isset($this->calls[$event->uid])) {
+        if (!isset($this->agents[$event->agentid]) or !isset($this->calls[$event->calleruid])) {
+            $this->logger->warn("Agent {$event->agentid} or call {$event->callerid}/{$event->calleruid} was not found.");
             return;
         }
 
         $agent = $this->agents[$event->agentid];
-        $call = $this->calls[$event->uid];
+        $call = $this->calls[$event->calleruid];
 
-        if (!isset($this->connections[$event->uid])) {
+        if (!isset($this->agentcallconnections[$event->calleruid])) {
+            $this->setCallStatus($call, 'INCALL');
+
             $agent->setQueue($call->getQueue());
             $this->setAgentStatus($agent, 'INCALL');
-            $this->setCallStatus($call, 'INCALL');
 
             $conn = new Connection($call, $agent);
 
@@ -324,7 +319,7 @@ class Callcenter
                 json_encode($conn)
             );
 
-            $this->connections[$conn->uid] = $conn;
+            $this->agentcallconnections[$conn->id] = $conn;
 
             $this->logger->info("Call {$call} was connected to agent {$agent}");
         }

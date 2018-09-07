@@ -56,7 +56,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
                         new CallCenterEvent(
                             'websocket.hello',
                             [
-                                'connection' => $from
+                                'wsconnection' => $from
                             ]
                         )
                     ]
@@ -70,7 +70,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
                         new CallCenterEvent(
                             'websocket.pause',
                             [
-                                'connection' => $from,
+                                'wsconnection' => $from,
                                 'agentid' => $agentid
                             ]
                         )
@@ -84,7 +84,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
                         new CallCenterEvent(
                             'websocket.avail',
                             [
-                                'connection' => $from,
+                                'wsconnection' => $from,
                                 'agentid' => $agentid
                             ]
                         )

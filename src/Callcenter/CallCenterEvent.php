@@ -20,8 +20,8 @@ class CallCenterEvent
 
     public function __get($field)
     {
-        if (!isset($this->data)) {
-            throw new \OutOfBoundsException("Field $field does found in event");
+        if (!isset($this->data[$field])) {
+            throw new \OutOfBoundsException("Field $field not found in event");
         }
 
         return $this->data[$field];

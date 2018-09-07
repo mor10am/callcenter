@@ -19,7 +19,7 @@
           </div>
           <div class="col-sm">
               <h3>Agents</h3>
-              <agent v-for="agent in agents" :agent="agent" :key="agent.id" />
+              <agent v-for="agent in agents" :agent="agent" :key="agent.agentid" />
           </div>
           <div class="col-sm">
               <h3>Connected calls</h3>
@@ -34,12 +34,12 @@
 <script type="text/x-template" id="agent-template">
   <div class="row">
     <div class="col-sm">
-      <div class="alert alert-info">{{ agent.id }} {{ agent.status }}
+      <div class="alert alert-info">{{ agent.agentid }} {{ agent.status }}
         <span v.if="agent.status==='INCALL'" class="badge badge-secondary">{{ agent.queue }}</span>
         <button
           class="btn btn-sm btn-info"
           v-if="calcNextStatus != ''"
-          v-on:click="setStatus"
+          @click="setStatus"
           :value="calcNextStatus">
           Go {{ calcNextStatus }}
         </button>
@@ -60,7 +60,7 @@
   <div class="row">
     <div class="col-sm">
       <div class="alert alert-success">
-          Call: {{ connection.call.callerid }} Agent: {{ connection.agent.id }}
+          Call: {{ connection.call.callerid }} Agent: {{ connection.agent.agentid }}
           <span class="badge badge-secondary">{{ connection.queue }}</span>
       </div>
     </div>
@@ -96,7 +96,7 @@ Vue.component('agent', {
   },
   methods: {
     setStatus: function(event) {
-      let str = event.target.value+':'+this.agent.id;
+      let str = event.target.value+':'+this.agent.agentid;
       app.conn.send(str);
     }
   },
@@ -120,8 +120,6 @@ var app = new Vue({
     this.conn = new WebSocket('ws://callcenter.local:8080/callcenter');
 
     this.conn.onmessage = function (e) {
-        console.log(e.data);
-
         let lines = e.data.split("\n");
 
         lines.forEach(function (val, index) {
@@ -147,19 +145,22 @@ var app = new Vue({
     },
     addOrUpdateAgent(agent) {
       if (agent.status == 'LOGGEDOUT') {
-        this.$delete(this.agents, agent.id);
+        this.$delete(this.agents, agent.agentid);
       } else {
-        this.$set(this.agents, agent.id, agent);
+        this.$set(this.agents, agent.agentid, agent);
       }
     },
     addOrUpdateConnection(connection) {
       this.$set(this.connections, connection.id, connection);
     },
     updateUI(msg) {
+        console.log(msg);
 
         let obj = JSON.parse(msg);
 
-        if (!obj) return;
+        if (!obj) {
+            return;
+        }
 
         switch (obj.type) {
             case 'AGENT':
@@ -172,7 +173,6 @@ var app = new Vue({
                 this.addOrUpdateConnection(obj);
                 break;
             default:
-                console.log(obj.type);
                 break;
         }
     }
