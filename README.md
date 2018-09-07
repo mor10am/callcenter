@@ -6,11 +6,11 @@
 $> php server.php
 ```
 
-It will listen to Asterisk AMI on tcp://callcenter.local:5038
-and create a Websocket server on tcp://callcenter.local:8080/callcenter
+It will listen to Asterisk AMI on ```tcp://callcenter.local:5038```
+and create a Websocket server on ```tcp://callcenter.local:8080/callcenter```
 
 The webpage dashboard is served by builtin Asterisk HTTP server
-at http://callcenter.local:8088
+at ```http://callcenter.local:8088/static/index.html```
 
 ```callcenter.local``` is added to ```/etc/hosts```
 
