@@ -14,6 +14,18 @@ at ```http://callcenter.local:8088/static/index.html```
 
 ```callcenter.local``` is added to ```/etc/hosts```
 
+The settings for the server is defined in ```.env``` as:
+
+```bash
+WSSERVERADDRESS=callcenter.local
+WSSERVERPORT=8080
+ASTERISKSERVER=tcp://localhost:5038
+AMI_USERNAME=admin
+AMI_PASSWORD=password
+AMI_MEMBER_TEMPLATE=local/{{agentid}}@agent-connect
+ENV=development
+```
+
 The webpage will connect to the websocket server and on connection
 get the current state of the the backend server process.
 
