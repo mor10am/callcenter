@@ -92,6 +92,6 @@ $asteriskmanager->on('caller.queued', [$callcenter, 'callQueued']);
 
 $asteriskmanager->on('queue.connect', [$callcenter, 'callAndAgentConnected']);
 
-$logger->info("Callcenter v".\Callcenter\Callcenter::VERSION." started.");
+$logger->info("Callcenter started.");
 
 $app->run();

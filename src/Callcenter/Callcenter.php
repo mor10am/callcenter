@@ -49,8 +49,6 @@ class Callcenter
      */
     private $agentcallconnections = [];
 
-    const VERSION = 1.1;
-
     /**
      * Callcenter constructor.
      * @param WebsocketHandler $websocket
