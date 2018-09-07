@@ -42,8 +42,6 @@ $app->route(
 $logger->debug("Started websocket at ".getenv('WSSERVERADDRESS').":".getenv('WSSERVERPORT'));
 
 try {
-    $logger->debug("Connecting to Asterisk at " . getenv('ASTERISKSERVER'));
-
     $ami = new \React\Stream\DuplexResourceStream(
         stream_socket_client(getenv('ASTERISKSERVER')),
         $loop
@@ -51,6 +49,8 @@ try {
 } catch (\Exception $e) {
     die($e->getMessage());
 }
+
+$logger->debug("Connected to Asterisk at " . getenv('ASTERISKSERVER'));
 
 $asteriskmanager = new Callcenter\AsteriskManager(
     $ami,
@@ -92,6 +92,6 @@ $asteriskmanager->on('caller.queued', [$callcenter, 'callQueued']);
 
 $asteriskmanager->on('queue.connect', [$callcenter, 'callAndAgentConnected']);
 
-$logger->info("Callcenter started.");
+$logger->info("Callcenter server started [{$env}].");
 
 $app->run();
