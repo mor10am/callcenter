@@ -6,7 +6,7 @@ namespace Callcenter\Model;
 class Connection implements \JsonSerializable
 {
     /**
-     * @var int
+     * @var string
      */
     public $id;
 
