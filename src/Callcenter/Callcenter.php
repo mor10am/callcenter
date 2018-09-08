@@ -7,7 +7,6 @@ use Callcenter\Model\Agent;
 use Callcenter\Model\Call;
 use Callcenter\Model\Connection;
 use Psr\Log\LoggerInterface;
-use Ratchet\ConnectionInterface;
 
 class Callcenter
 {
