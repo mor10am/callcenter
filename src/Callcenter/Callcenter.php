@@ -65,6 +65,30 @@ class Callcenter
         $this->ami = $ami;
         $this->logger = $logger;
         $this->settings = array_merge($this->settings, $settings);
+        $this->stats = new \Callcenter\Model\Statistics();
+    }
+
+    /**
+     * @return false|string
+     */
+    private function calcAndSerializeStats()
+    {
+        $this->stats->agents_online = count(
+            array_filter(
+                $this->agents,
+                function($agent) {
+                    /**
+                     * @var \Callcenter\Model\Agent $agent
+                     */
+                    return $agent->status != 'LOGGEDOUT';
+                }
+            )
+        );
+
+        $this->stats->calls_online = count($this->calls);
+        $this->stats->connections_online = count($this->agentcallconnections);
+
+        return json_encode($this->stats);
     }
 
     /**
@@ -76,7 +100,7 @@ class Callcenter
             throw new \InvalidArgumentException("This method expects a websocket.hello event. [".$event->getType()."]");
         }
 
-        $str = "";
+        $str = $this->calcAndSerializeStats()."\n";
 
         foreach ($this->agents as $agent) {
             $str .= json_encode($agent)."\n";
@@ -90,11 +114,9 @@ class Callcenter
             $str .= json_encode($connection)."\n";
         }
 
-        if ($str) {
-            $this->logger->debug("TO UI: ".$str);
+        $event->wsconnection->send($str);
 
-            $event->wsconnection->send($str);
-        }
+        $this->logger->debug("TO UI: ".$str);
     }
 
     /**
@@ -227,7 +249,10 @@ class Callcenter
 
         $call = $this->getOrCreateCall($event->callerid, $event->uid);
 
-        $this->websocket->sendtoAll(json_encode($call));
+        $this->websocket->sendtoAll(
+            json_encode($call)."\n".
+            $this->calcAndSerializeStats()."\n"
+        );
 
         $this->logger->info("Call {$call} is in the IVR");
     }
@@ -243,6 +268,8 @@ class Callcenter
 
         $call = $this->getOrCreateCall($event->callerid, $event->uid);
 
+        $call_duration = $call->getDuration();
+
         $this->setCallStatus($call, 'HANGUP');
 
         unset($this->calls[$call->uid]);
@@ -253,6 +280,10 @@ class Callcenter
             $agent = $this->agentcallconnections[$call->uid]->agent;
             $this->ami->unpauseAgent($agent->getAgentId());
             unset($this->agentcallconnections[$call->uid]);
+
+            $this->stats->addHandledCall($call_duration);
+        } else {
+            $this->stats->addAbandonedCall($call_duration);
         }
 
         $str = json_encode($call);
@@ -260,6 +291,8 @@ class Callcenter
         if ($agent) {
             $str .= "\n".json_encode($agent);
         }
+
+        $str .= "\n".$this->calcAndSerializeStats();
 
         $this->websocket->sendtoAll($str);
 
@@ -280,7 +313,12 @@ class Callcenter
         $call->setQueue($event->queue);
         $this->setCallStatus($call, 'QUEUED');
 
-        $this->websocket->sendtoAll(json_encode($call));
+        $this->stats->addCallReceived();
+
+        $this->websocket->sendtoAll(
+            json_encode($call)."\n".
+            $this->calcAndSerializeStats()."\n"
+        );
 
         $this->logger->info("Call {$call} was queued in queue {$call->queue}");
     }
@@ -299,10 +337,19 @@ class Callcenter
             return;
         }
 
+        /**
+         * @var \Callcenter\Model\Agent $agent
+         */
         $agent = $this->agents[$event->agentid];
+
+        /**
+         * @var \Callcenter\Model\Call $call
+         */
         $call = $this->calls[$event->calleruid];
 
         if (!isset($this->agentcallconnections[$event->calleruid])) {
+            $call_duration = $call->getDuration();
+
             $this->setCallStatus($call, 'INCALL');
 
             $agent->setQueue($call->getQueue());
@@ -310,13 +357,16 @@ class Callcenter
 
             $conn = new Connection($call, $agent);
 
+            $this->agentcallconnections[$conn->id] = $conn;
+
+            $this->stats->addAnsweredCall($call_duration);
+
             $this->websocket->sendtoAll(
                 json_encode($agent)."\n".
                 json_encode($call)."\n".
-                json_encode($conn)
+                json_encode($conn)."\n".
+                $this->calcAndSerializeStats()."\n"
             );
-
-            $this->agentcallconnections[$conn->id] = $conn;
 
             $this->logger->info("Call {$call} was connected to agent {$agent}");
         }
@@ -339,6 +389,11 @@ class Callcenter
                 FILE_APPEND
             );
         }
+
+        $this->websocket->sendtoAll(
+            $this->calcAndSerializeStats()."\n"
+        );
+
     }
 
     /**
@@ -359,7 +414,10 @@ class Callcenter
             );
         }
 
-        $this->websocket->sendtoAll(json_encode($agent));
+        $this->websocket->sendtoAll(
+            json_encode($agent)."\n".
+            $this->calcAndSerializeStats()."\n"
+        );
 
         $this->logger->info("Agent {$agent}");
     }
