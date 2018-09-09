@@ -295,7 +295,6 @@ class Callcenter
         }
 
         if (!isset($this->agents[$event->agentid]) or !isset($this->calls[$event->calleruid])) {
-            $this->logger->warning("Agent {$event->agentid} or call {$event->callerid}/{$event->calleruid} was not found.");
             return;
         }
 
