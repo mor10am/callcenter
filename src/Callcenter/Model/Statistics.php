@@ -21,6 +21,10 @@ class Statistics implements \JsonSerializable
     public $abandoned_queue_time = 0;
     public $incall_time = 0;
 
+    public $inside_sla = 0;
+
+    const SLA_SECONDS = 10;
+
     /**
      *
      */
@@ -36,6 +40,10 @@ class Statistics implements \JsonSerializable
     {
         $this->calls_answered += 1;
         $this->queue_time += $duration;
+
+        if ($duration <= self::SLA_SECONDS) {
+            $this->inside_sla += 1;
+        }
 
         $this->average_queue_time = round($this->queue_time / $this->calls_answered);
     }
@@ -79,6 +87,7 @@ class Statistics implements \JsonSerializable
             'average_handle_time' => $this->average_handle_time,
             'average_queue_time' => $this->average_queue_time,
             'average_abandoned_time' => $this->average_abandoned_time,
+            'sla' => ($this->calls_answered)?round($this->inside_sla / $this->calls_answered * 100, 2):"0",
         ];
     }
 }
