@@ -2,7 +2,7 @@
 
 namespace Callcenter;
 
-class CallCenterEvent
+final class CallCenterEvent
 {
     /**
      * @var string
