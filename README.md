@@ -1,4 +1,4 @@
-# Callcenter
+# Simple Asterisk callcenter with PHP and Vue.js
 
 ## Server process and frontend
 
