@@ -53,7 +53,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
             case 'HELLO':
                 $this->emit(
                     'websocket.hello', [
-                        new CallCenterEvent(
+                        new CallcenterEvent(
                             'websocket.hello',
                             [
                                 'wsconnection' => $from
@@ -67,7 +67,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
 
                 $this->emit(
                     'websocket.pause', [
-                        new CallCenterEvent(
+                        new CallcenterEvent(
                             'websocket.pause',
                             [
                                 'wsconnection' => $from,
@@ -81,7 +81,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
                 $agentid = $parts[1];
 
                 $this->emit('websocket.avail', [
-                        new CallCenterEvent(
+                        new CallcenterEvent(
                             'websocket.avail',
                             [
                                 'wsconnection' => $from,

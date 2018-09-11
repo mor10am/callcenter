@@ -8,7 +8,7 @@ use Callcenter\Model\Call;
 use Callcenter\Model\Connection;
 use Psr\Log\LoggerInterface;
 
-class Callcenter
+final class Callcenter
 {
     /**
      * @var \Callcenter\WebsocketHandler $websocket
@@ -92,9 +92,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function websocketHello(CallCenterEvent $event) : void
+    public function websocketHello(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'websocket.hello') {
             throw new \InvalidArgumentException("This method expects a websocket.hello event. [".$event->getType()."]");
@@ -120,9 +120,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function websocketSetAgentAvail(CallCenterEvent $event) : void
+    public function websocketSetAgentAvail(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'websocket.avail') {
             throw new \InvalidArgumentException("This method expects a websocket.avail event. [".$event->getType()."]");
@@ -136,9 +136,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function websocketSetAgentPause(CallCenterEvent $event) : void
+    public function websocketSetAgentPause(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'websocket.pause') {
             throw new \InvalidArgumentException("This method expects a websocket.pause event. [".$event->getType()."]");
@@ -179,9 +179,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function agentLoggedIn(CallCenterEvent $event) : void
+    public function agentLoggedIn(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'agent.loggedin') {
             throw new \InvalidArgumentException("This method expects a agent.loggedin event. [".$event->getType()."]");
@@ -194,9 +194,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function agentLoggedOut(CallCenterEvent $event) : void
+    public function agentLoggedOut(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'agent.loggedout') {
             throw new \InvalidArgumentException("This method expects a agent.loggedout event. [".$event->getType()."]");
@@ -209,9 +209,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function agentPaused(CallCenterEvent $event) : void
+    public function agentPaused(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'agent.paused') {
             throw new \InvalidArgumentException("This method expects a agent.paused event. [".$event->getType()."]");
@@ -224,9 +224,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function agentAvail(CallCenterEvent $event) : void
+    public function agentAvail(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'agent.avail') {
             throw new \InvalidArgumentException("This method expects a agent.avail event. [".$event->getType()."]");
@@ -239,9 +239,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function callNew(CallCenterEvent $event) : void
+    public function callNew(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'caller.new') {
             throw new \InvalidArgumentException("This method expects a caller.new event. [".$event->getType()."]");
@@ -258,9 +258,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function callHangup(CallCenterEvent $event) : void
+    public function callHangup(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'caller.hangup') {
             throw new \InvalidArgumentException("This method expects a caller.hangup event. [".$event->getType()."]");
@@ -300,9 +300,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function callQueued(CallCenterEvent $event) : void
+    public function callQueued(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'caller.queued') {
             throw new \InvalidArgumentException("This method expects a caller.queued event. [".$event->getType()."]");
@@ -324,9 +324,9 @@ class Callcenter
     }
 
     /**
-     * @param CallCenterEvent $event
+     * @param CallcenterEvent $event
      */
-    public function callAndAgentConnected(CallCenterEvent $event) : void
+    public function callAndAgentConnected(CallcenterEvent $event) : void
     {
         if ($event->getType() != 'queue.connect') {
             throw new \InvalidArgumentException("This method expects a queue.connect event. [".$event->getType()."]");
