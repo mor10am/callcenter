@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Callcenter\Model;
 
-class Statistics implements \JsonSerializable
+final class Statistics implements \JsonSerializable
 {
     public $calls_received = 0;
     public $calls_abandoned = 0;

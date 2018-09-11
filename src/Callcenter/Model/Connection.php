@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Callcenter\Model;
 
-class Connection implements \JsonSerializable
+final class Connection implements \JsonSerializable
 {
     /**
      * @var string
