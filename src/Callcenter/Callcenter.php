@@ -57,12 +57,17 @@ final class Callcenter
     public function __construct(
         \Callcenter\WebsocketHandler $websocket,
         \Callcenter\AsteriskManager $ami,
-        LoggerInterface $logger,
+        LoggerInterface $logger = null,
         array $settings = []
     )
     {
         $this->websocket = $websocket;
         $this->ami = $ami;
+
+        if ($logger == null) {
+            $logger = new \Monolog\Logger(new \Monolog\Handler\NullHandler());
+        }
+
         $this->logger = $logger;
         $this->settings = array_merge($this->settings, $settings);
         $this->stats = new \Callcenter\Model\Statistics();
@@ -128,11 +133,9 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a websocket.avail event. [".$event->getType()."]");
         }
 
-        if (!isset($this->agents[$event->agentid])) {
-            $this->agents[$event->agentid] = new \Callcenter\Model\Agent($event->agentid);
-        }
+        $agent = $this->getOrCreateAgent($event->agentid);
 
-        $this->ami->unpauseAgent($event->agentid);
+        $this->ami->unpauseAgent($agent->getAgentId());
     }
 
     /**
@@ -144,11 +147,9 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a websocket.pause event. [".$event->getType()."]");
         }
 
-        if (!isset($this->agents[$event->agentid])) {
-            $this->agents[$event->agentid] = new \Callcenter\Model\Agent($event->agentid);
-        }
+        $agent = $this->getOrCreateAgent($event->agentid);
 
-        $this->ami->pauseAgent($event->agentid);
+        $this->ami->pauseAgent($agent->getAgentId());
     }
 
     /**
@@ -297,6 +298,8 @@ final class Callcenter
         $this->websocket->sendtoAll($str);
 
         $this->logger->info("Call {$call} hung up");
+
+        $this->setCallStatus($call, 'NA');
     }
 
     /**
