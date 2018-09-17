@@ -31,6 +31,11 @@ final class Call implements \JsonSerializable
     public $time;
 
     /**
+     * @var bool
+     */
+    public $answered = false;
+
+    /**
      * Caller constructor.
      * @param string $callerid
      * @param string $uid
@@ -77,6 +82,14 @@ final class Call implements \JsonSerializable
     }
 
     /**
+     * @return bool
+     */
+    public function isAnswered() : bool
+    {
+        return $this->answered;
+    }
+
+    /**
      * @param string $status
      * @return bool
      */
@@ -86,6 +99,14 @@ final class Call implements \JsonSerializable
 
         if ($this->status == $status) {
             return false;
+        }
+
+        if ($status == 'INCALL') {
+            $this->answered = true;
+        }
+
+        if ($status == 'HANGUP') {
+            $status = ($this->answered)?"HANGUP":"ABANDON";
         }
 
         $this->status = $status;
@@ -120,6 +141,7 @@ final class Call implements \JsonSerializable
             'status' => $this->status,
             'queue' => $this->queue,
             'time' => $this->time,
+            'answered' => $this->answered,
         ];
     }
 
