@@ -193,7 +193,7 @@ var app = new Vue({
   },
   methods: {
     addOrUpdateCall(call) {
-      if (call.status == 'HANGUP') {
+      if (call.status == 'HANGUP' || call.status == 'ABANDON') {
           this.$delete(this.calls, call.id);
           // connection has same Id as call
           this.$delete(this.connections, call.id);
