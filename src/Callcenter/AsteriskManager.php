@@ -83,7 +83,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      * The {{agentid}} part will be replaced
      * @var string|null
      */
-    private $memberTemplate;
+    private $memberTemplate = 'local/{{agentid}}@agent-connect';
 
     /**
      * AsteriskManager constructor.
