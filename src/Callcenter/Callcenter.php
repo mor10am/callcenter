@@ -133,9 +133,12 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a websocket.avail event. [".$event->getType()."]");
         }
 
-        $agent = $this->getOrCreateAgent($event->agentid);
+        $agent = $this->getOrCreateAgent(
+            $event->get('agentid'),
+            $event->get('member', null)
+        );
 
-        $this->ami->unpauseAgent($agent->getAgentId());
+        $this->ami->unpauseAgent($agent->getMember());
     }
 
     /**
@@ -147,19 +150,23 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a websocket.pause event. [".$event->getType()."]");
         }
 
-        $agent = $this->getOrCreateAgent($event->agentid);
+        $agent = $this->getOrCreateAgent(
+            $event->get('agentid'),
+            $event->get('member', null)
+        );
 
-        $this->ami->pauseAgent($agent->getAgentId());
+        $this->ami->pauseAgent($agent->getMember());
     }
 
     /**
      * @param string $agentid
+     * @param string $member
      * @return Agent
      */
-    private function getOrCreateAgent(string $agentid) : Agent
+    private function getOrCreateAgent(string $agentid, string $member = null) : Agent
     {
         if (!isset($this->agents[$agentid])) {
-            $this->agents[$agentid] = new Agent($agentid);
+            $this->agents[$agentid] = new Agent($agentid, $member);
         }
 
         return $this->agents[$agentid];
@@ -189,7 +196,10 @@ final class Callcenter
         }
 
         $this->setAgentStatus(
-            $this->getOrCreateAgent($event->agentid),
+            $this->getOrCreateAgent(
+                $event->get('agentid'),
+                $event->get('member', null)
+            ),
             'LOGGEDIN'
         );
     }
@@ -204,7 +214,10 @@ final class Callcenter
         }
 
         $this->setAgentStatus(
-            $this->getOrCreateAgent($event->agentid),
+            $this->getOrCreateAgent(
+                $event->get('agentid'),
+                $event->get('member', null)
+            ),
             'LOGGEDOUT'
         );
     }
@@ -219,7 +232,10 @@ final class Callcenter
         }
 
         $this->setAgentStatus(
-            $this->getOrCreateAgent($event->agentid),
+            $this->getOrCreateAgent(
+                $event->get('agentid'),
+                $event->get('member', null)
+            ),
             'PAUSED'
         );
     }
@@ -234,7 +250,10 @@ final class Callcenter
         }
 
         $this->setAgentStatus(
-            $this->getOrCreateAgent($event->agentid),
+            $this->getOrCreateAgent(
+                $event->get('agentid'),
+                $event->get('member', null)
+            ),
             'AVAIL'
         );
     }
@@ -248,7 +267,7 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a caller.new event. [".$event->getType()."]");
         }
 
-        $call = $this->getOrCreateCall($event->callerid, $event->uid);
+        $call = $this->getOrCreateCall($event->get('callerid'), $event->get('uid'));
 
         $this->websocket->sendtoAll(
             json_encode($call)."\n".
@@ -267,7 +286,7 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a caller.hangup event. [".$event->getType()."]");
         }
 
-        $call = $this->getOrCreateCall($event->callerid, $event->uid);
+        $call = $this->getOrCreateCall($event->get('callerid'), $event->get('uid'));
 
         $call_duration = $call->getDuration();
 
@@ -279,7 +298,7 @@ final class Callcenter
 
         if (isset($this->agentcallconnections[$call->uid])) {
             $agent = $this->agentcallconnections[$call->uid]->agent;
-            $this->ami->unpauseAgent($agent->getAgentId());
+            $this->ami->unpauseAgent($agent->getMember());
             unset($this->agentcallconnections[$call->uid]);
 
             $this->stats->addHandledCall($call_duration);
@@ -311,9 +330,9 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a caller.queued event. [".$event->getType()."]");
         }
 
-        $call = $this->getOrCreateCall($event->callerid, $event->uid);
+        $call = $this->getOrCreateCall($event->get('callerid'), $event->get('uid'));
 
-        $call->setQueue($event->queue);
+        $call->setQueue($event->get('queue'));
         $this->setCallStatus($call, 'QUEUED');
 
         $this->stats->addCallReceived();
@@ -335,21 +354,24 @@ final class Callcenter
             throw new \InvalidArgumentException("This method expects a queue.connect event. [".$event->getType()."]");
         }
 
-        if (!isset($this->agents[$event->agentid]) or !isset($this->calls[$event->calleruid])) {
+        $agentid = $event->get('agentid');
+        $calleruid = $event->get('calleruid');
+
+        if (!isset($this->agents[$agentid]) or !isset($this->calls[$calleruid])) {
             return;
         }
 
         /**
          * @var \Callcenter\Model\Agent $agent
          */
-        $agent = $this->agents[$event->agentid];
+        $agent = $this->agents[$agentid];
 
         /**
          * @var \Callcenter\Model\Call $call
          */
-        $call = $this->calls[$event->calleruid];
+        $call = $this->calls[$calleruid];
 
-        if (!isset($this->agentcallconnections[$event->calleruid])) {
+        if (!isset($this->agentcallconnections[$calleruid])) {
             $call_duration = $call->getDuration();
 
             $this->setCallStatus($call, 'INCALL');

@@ -79,20 +79,13 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
     private $eventMask;
 
     /**
-     * Template for the queue member channel (ex. local/{{agentid}}@context)
-     * The {{agentid}} part will be replaced
-     * @var string|null
-     */
-    private $memberTemplate = 'local/{{agentid}}@agent-connect';
-
-    /**
      * AsteriskManager constructor.
      * @param \React\Stream\DuplexResourceStream $stream
      * @param array $options
      */
     public function __construct(
         \React\Stream\DuplexResourceStream $stream,
-        array $options
+        array $options = []
     )
     {
         $this->logger = new NullLogger();
@@ -104,7 +97,6 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
         $this->eventFactory = new EventFactoryImpl();
         $this->incomingQueue = array();
         $this->lastActionId = "";
-        $this->memberTemplate = isset($options['member_template']) ? $options['member_template'] : null;
 
         $this->registerEventListener($this);
 
@@ -227,7 +219,7 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
      */
     protected function handleAgentPause(QueueMemberPausedEvent $event) : void
     {
-        $agentstatus = strtolower(($event->getKey("paused") == 1)?"PAUSED":"AVAIL");
+        $agentstatus = strtolower(($event->getPaused())?"PAUSED":"AVAIL");
 
         $type = "agent.{$agentstatus}";
 
@@ -235,7 +227,8 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             new CallcenterEvent(
                 $type,
                 [
-                    'agentid' => $event->getKey('membername'),
+                    'agentid' => $event->getMemberName(),
+                    'member' => $event->getKey('interface'),
                     'uid' => $event->getKey('uniqueid'),
                 ]
             )
@@ -251,7 +244,8 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             new CallcenterEvent(
                 'agent.loggedout',
                 [
-                    'agentid' => $event->getKey('calleridnum'),
+                    'agentid' => $event->getKey('agentid'),
+                    'member' => $event->getKey('member'),
                     'uid' => $event->getKey('uniqueid'),
                 ]
             )
@@ -267,7 +261,8 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
             new CallcenterEvent(
                 'agent.loggedin',
                 [
-                    'agentid' => $event->getKey('calleridnum'),
+                    'agentid' => $event->getKey('agentid'),
+                    'member' => $event->getKey('member'),
                     'uid' => $event->getKey('uniqueid'),
                 ]
             )
@@ -308,12 +303,10 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
     /**
      * Send action to Asterisk to unpause the agent
-     * @param string $agentid
+     * @param string $member
      */
-    public function unpauseAgent($agentid)
+    public function unpauseAgent($member)
     {
-        $member = str_replace("{{agentid}}", $agentid, $this->memberTemplate);
-
         $this->send(
             new QueueUnpauseAction($member)
         );
@@ -323,12 +316,10 @@ class AsteriskManager extends EventEmitter implements \PAMI\Client\IClient,
 
     /**
      * Send action to Asterisk to pause the agent
-     * @param string $agentid
+     * @param string $member
      */
-    public function pauseAgent($agentid)
+    public function pauseAgent($member)
     {
-        $member = str_replace("{{agentid}}", $agentid, $this->memberTemplate);
-
         $this->send(
             new QueuePauseAction($member)
         );

@@ -13,6 +13,11 @@ final class Agent implements \JsonSerializable
     /**
      * @var string
      */
+    public $member;
+
+    /**
+     * @var string
+     */
     public $status = "NA";
 
     /**
@@ -28,11 +33,33 @@ final class Agent implements \JsonSerializable
     /**
      *
      * @param string $agentid
+     * @param string $member
      */
-    public function __construct(string $agentid)
+    public function __construct(string $agentid, string $member = null)
     {
         $this->agentid = $agentid;
+
+        if ($member) {
+            $this->member = $member;
+        }
+
         $this->time = time();
+    }
+
+    /**
+     * @param string $member
+     */
+    public function setMember(string $member) : void
+    {
+        $this->member = $member;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMember() : string
+    {
+        return $this->member;
     }
 
     /**

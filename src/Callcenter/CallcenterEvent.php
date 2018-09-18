@@ -44,4 +44,18 @@ final class CallcenterEvent
 
         return $this->data[$field];
     }
+
+    /**
+     * @param string $field
+     * @param mixed $default
+     * @return mixed
+     */
+    public function get(string $field, $default = null)
+    {
+        if (!isset($this->data[$field])) {
+            return $default;
+        }
+
+        return $this->data[$field];
+    }
 }

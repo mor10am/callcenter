@@ -52,12 +52,7 @@ try {
 
 $logger->debug("Connected to Asterisk at " . getenv('ASTERISKSERVER'));
 
-$asteriskmanager = new Callcenter\AsteriskManager(
-    $ami,
-    [
-        'member_template' => getenv('AMI_MEMBER_TEMPLATE'),
-    ]
-);
+$asteriskmanager = new Callcenter\AsteriskManager($ami);
 
 $asteriskmanager->setLogger($logger);
 
