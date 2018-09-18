@@ -52,15 +52,18 @@ final class Callcenter
      * @param WebsocketHandler $websocket
      * @param AsteriskManager $ami
      * @param ReportInterface|null $reportwriter
+     * @param \Redis $redis
      * @param LoggerInterface|null $logger
      */
     public function __construct(
         WebsocketHandler $websocket,
         AsteriskManager $ami,
         ReportInterface $reportwriter = null,
+        \Redis $redis,
         LoggerInterface $logger = null
     )
     {
+        $this->redis = $redis;
         $this->websocket = $websocket;
         $this->ami = $ami;
 
@@ -71,6 +74,8 @@ final class Callcenter
         $this->logger = $logger;
         $this->reportwriter = $reportwriter;
         $this->stats = new \Callcenter\Model\Statistics();
+
+        $this->loadFromRedis();
     }
 
     /**
@@ -93,7 +98,48 @@ final class Callcenter
         $this->stats->calls_online = count($this->calls);
         $this->stats->connections_online = count($this->agentcallconnections);
 
+        $this->saveToRedis();
+
         return json_encode($this->stats);
+    }
+
+    /**
+     *
+     */
+    private function loadFromRedis()
+    {
+        $storage = (array) unserialize((string) $this->redis->get('callcenter.storage'));
+
+        if (isset($storage['stats'])) {
+            $this->stats->init((array) $storage['stats']);
+        }
+
+        if (isset($storage['calls'])) {
+            $this->calls = (array) $storage['calls'];
+        }
+
+        if (isset($storage['agents'])) {
+            $this->agents = (array) $storage['agents'];
+        }
+
+        if (isset($storage['agentcallconnections'])) {
+            $this->agentcallconnections = (array) $storage['agentcallconnections'];
+        }
+    }
+
+    /**
+     *
+     */
+    private function saveToRedis()
+    {
+        $storage = [
+            'stats' => (array) $this->stats,
+            'calls' => (array) $this->calls,
+            'agents' => (array) $this->agents,
+            'agentcallconnections' => (array) $this->agentcallconnections,
+        ];
+
+        $this->redis->set('callcenter.storage', serialize($storage));
     }
 
     /**

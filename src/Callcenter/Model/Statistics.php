@@ -26,6 +26,18 @@ final class Statistics implements \JsonSerializable
     const SLA_SECONDS = 10;
 
     /**
+     * @param array|false $stats
+     */
+    public function init($stats)
+    {
+        if (!is_array($stats)) return;
+
+        foreach ($stats as $key => $value) {
+            $this->$key = $value;
+        }
+    }
+
+    /**
      *
      */
     public function addCallReceived() : void

@@ -58,10 +58,16 @@ $asteriskmanager->setLogger($logger);
 
 $reportwriter = new \Callcenter\Report\File(__DIR__."/report.csv");
 
+$redis = new \Redis();
+$redis->connect(
+    getenv('REDIS_SERVER')
+);
+
 $callcenter = new Callcenter\Callcenter(
     $websockethandler,
     $asteriskmanager,
     $reportwriter,
+    $redis,
     $logger
 );
 

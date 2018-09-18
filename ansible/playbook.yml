@@ -22,6 +22,8 @@
         - php-intl
         - php-dev
         - php-pear
+        - php-redis
+        - redis-server
 
   - name: create project folder
     file:
