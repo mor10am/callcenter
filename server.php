@@ -56,11 +56,6 @@ $asteriskmanager = new Callcenter\AsteriskManager($ami);
 
 $asteriskmanager->setLogger($logger);
 
-$asteriskmanager->login(
-    getenv('AMI_USERNAME'),
-    getenv('AMI_PASSWORD')
-);
-
 $reportwriter = new \Callcenter\Report\File(__DIR__."/report.csv");
 
 $callcenter = new Callcenter\Callcenter(
@@ -84,6 +79,11 @@ $asteriskmanager->on('caller.hangup', [$callcenter, 'callHangup']);
 $asteriskmanager->on('caller.queued', [$callcenter, 'callQueued']);
 
 $asteriskmanager->on('queue.connect', [$callcenter, 'callAndAgentConnected']);
+
+$asteriskmanager->login(
+    getenv('AMI_USERNAME'),
+    getenv('AMI_PASSWORD')
+);
 
 $logger->info("Callcenter server started [{$env}].");
 
