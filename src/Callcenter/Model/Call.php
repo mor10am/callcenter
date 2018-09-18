@@ -146,15 +146,23 @@ final class Call implements \JsonSerializable
     }
 
     /**
-     * @return string
+     * @return Report
      */
-    public function getReportLine() : string
+    public function getReport() : Report
     {
         $ts = time();
 
         $duration = $ts - $this->time;
         $at = $ts - $duration;
 
-        return date('Y-m-d H:i:s', $at).";CALL;{$this->callerid};{$this->status};$duration;{$this->queue}";
+        $report = new Report();
+        $report->type = 'CALL';
+        $report->id = $this->callerid;
+        $report->status = $this->status;
+        $report->timestamp = date('Y-m-d H:i:s', $at);
+        $report->duration = $duration;
+        $report->queue = $this->queue;
+
+        return $report;
     }
 }

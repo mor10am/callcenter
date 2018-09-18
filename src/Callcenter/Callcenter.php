@@ -7,6 +7,7 @@ use Callcenter\Model\Agent;
 use Callcenter\Model\Call;
 use Callcenter\Model\Connection;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 final class Callcenter
 {
@@ -26,13 +27,6 @@ final class Callcenter
     private $logger;
 
     /**
-     * @var array $settings
-     */
-    private $settings = [
-        'report' => false
-    ];
-
-    /**
      * @var array
      */
     private $agents = [];
@@ -49,27 +43,33 @@ final class Callcenter
     private $agentcallconnections = [];
 
     /**
+     * @var ReportInterface
+     */
+    private $reportwriter;
+
+    /**
      * Callcenter constructor.
      * @param WebsocketHandler $websocket
      * @param AsteriskManager $ami
-     * @param LoggerInterface $logger
+     * @param ReportInterface|null $reportwriter
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
-        \Callcenter\WebsocketHandler $websocket,
-        \Callcenter\AsteriskManager $ami,
-        LoggerInterface $logger = null,
-        array $settings = []
+        WebsocketHandler $websocket,
+        AsteriskManager $ami,
+        ReportInterface $reportwriter = null,
+        LoggerInterface $logger = null
     )
     {
         $this->websocket = $websocket;
         $this->ami = $ami;
 
         if ($logger == null) {
-            $logger = new \Monolog\Logger(new \Monolog\Handler\NullHandler());
+            $logger = new NullLogger();
         }
 
         $this->logger = $logger;
-        $this->settings = array_merge($this->settings, $settings);
+        $this->reportwriter = $reportwriter;
         $this->stats = new \Callcenter\Model\Statistics();
     }
 
@@ -404,14 +404,15 @@ final class Callcenter
      */
     private function setCallStatus(Call $call, string $status) : void
     {
-        $report = $call->getReportLine();
+        /**
+         * @var Report
+         */
+        $report = $call->getReport();
 
         if ($call->setStatus($status)) {
-            file_put_contents(
-                $this->settings['report'],
-                $report."\n",
-                FILE_APPEND
-            );
+            if ($this->reportwriter) {
+                $this->reportwriter->write($report);
+            }
         }
 
         $this->websocket->sendtoAll(
@@ -428,14 +429,15 @@ final class Callcenter
      */
     private function setAgentStatus(Agent $agent, string $status) : void
     {
-        $report = $agent->getReportLine();
+        /**
+         * @var Report
+         */
+        $report = $agent->getReport();
 
         if ($agent->setStatus($status)) {
-            file_put_contents(
-                $this->settings['report'],
-                $report."\n",
-                FILE_APPEND
-            );
+            if ($this->reportwriter) {
+                $this->reportwriter->write($report);
+            }
         }
 
         $this->websocket->sendtoAll(

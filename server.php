@@ -61,15 +61,13 @@ $asteriskmanager->login(
     getenv('AMI_PASSWORD')
 );
 
-$settings = [
-    'report' => __DIR__."/report.csv",
-];
+$reportwriter = new \Callcenter\Report\File(__DIR__."/report.csv");
 
 $callcenter = new Callcenter\Callcenter(
     $websockethandler,
     $asteriskmanager,
-    $logger,
-    $settings
+    $reportwriter,
+    $logger
 );
 
 $websockethandler->on('websocket.hello', [$callcenter, 'websocketHello']);
