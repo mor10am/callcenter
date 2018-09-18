@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Callcenter;
 
 use Evenement\EventEmitter;
+use Psr\Log\NullLogger;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use Psr\Log\LoggerInterface;
@@ -22,10 +23,14 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
 
     /**
      * WebsocketHandler constructor.
-     * @param LoggerInterface $logger
+     * @param LoggerInterface|null $logger
      */
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger = null)
     {
+        if ($logger == null) {
+            $logger = new NullLogger();
+        }
+
         $this->logger = $logger;
         $this->clients = new \SplObjectStorage;
     }
@@ -92,7 +97,7 @@ final class WebsocketHandler extends EventEmitter implements MessageComponentInt
                 );
                 break;
             default:
-                echo "Unknown msg: {$msg}\n";
+                $this->logger->error("Unknown msg: {$msg}");
         }
     }
 
