@@ -22,6 +22,7 @@ WSSERVERPORT=8080
 ASTERISKSERVER=tcp://localhost:5038
 AMI_USERNAME=admin
 AMI_PASSWORD=password
+REDIS_SERVER=127.0.0.1
 ENV=development
 ```
 
