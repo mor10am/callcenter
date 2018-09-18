@@ -22,7 +22,6 @@ WSSERVERPORT=8080
 ASTERISKSERVER=tcp://localhost:5038
 AMI_USERNAME=admin
 AMI_PASSWORD=password
-AMI_MEMBER_TEMPLATE=local/{{agentid}}@agent-connect
 ENV=development
 ```
 
