@@ -2,6 +2,10 @@
 - hosts: asterisk
   remote_user: deploy
   become: yes
+  vars:
+    - redis_bind_interface: 0.0.0.0
+  roles:
+    - ansible-role-redis
 
   tasks:
   - name: install packages
@@ -23,7 +27,6 @@
         - php-dev
         - php-pear
         - php-redis
-        - redis-server
 
   - name: create project folder
     file:
