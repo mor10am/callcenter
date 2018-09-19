@@ -10,22 +10,25 @@
 </head>
 <body>
 
-<div class="container-fluid">
+<div class="container">
     <div id="app">
-      <div>
-          <stats :stats="stats" />
+      <div class="row">
+        <stats :stats="stats" />
       </div>
       <div class="row">
-          <div class="col-sm">
-              <h3>Incoming calls</h3>
+          <div class="col">
+              <h3>Calls</h3>
+              <hr/>
               <call v-for="call in calls" :call="call" :key="call.id"/>
           </div>
-          <div class="col-sm">
+          <div class="col">
               <h3>Agents</h3>
+              <hr/>
               <agent v-for="agent in agents" :agent="agent" :key="agent.agentid" />
           </div>
-          <div class="col-sm">
-              <h3>Connected calls</h3>
+          <div class="col">
+              <h3>Connections</h3>
+              <hr/>
               <connection v-for="connection in connections" :connection="connection" :key="connection.id"/>
           </div>
       </div>
@@ -35,48 +38,48 @@
 <script src="js/vue.js"></script>
 
 <script type="text/x-template" id="stats-template">
-    <div class="row">
-    <div class="btn btn-success">
+<div>
+    <span class="btn btn-success">
         Agents <span class="badge badge-light">{{ stats.agents_online }}</span>
-    </div>
+    </span>
 
-    <div class="btn btn-success">
+    <span class="btn btn-success">
         Calls <span class="badge badge-light">{{ stats.calls_online }}</span>
-    </div>
+    </span>
 
-    <div class="btn btn-success">
+    <span class="btn btn-success">
         Connections <span class="badge badge-light">{{ stats.connections_online }}</span>
-    </div>
+    </span>
 
-    <div class="btn btn-secondary">
+    <span class="btn btn-secondary">
         Received <span class="badge badge-light">{{ stats.calls_received }}</span>
-    </div>
+    </span>
 
-    <div class="btn btn-secondary">
+    <span class="btn btn-secondary">
         Answered <span class="badge badge-light">{{ stats.calls_answered }}</span>
-    </div>
+    </span>
 
-    <div class="btn btn-secondary">
+    <span class="btn btn-secondary">
         Abandoned <span class="badge badge-light">{{ stats.calls_abandoned }}</span>
-    </div>
+    </span>
 
-    <div class="btn btn-warning">
+    <span class="btn btn-warning">
         AHT <span class="badge badge-light">{{ stats.average_handle_time }} sec</span>
-    </div>
+    </span>
 
-    <div class="btn btn-warning">
+    <span class="btn btn-warning">
         AQT <span class="badge badge-light">{{ stats.average_queue_time }} sec</span>
-    </div>
+    </span>
 
-    <div class="btn btn-warning">
+    <span class="btn btn-warning">
         AAT <span class="badge badge-light">{{ stats.average_abandoned_time }} sec</span>
-    </div>
+    </span>
 
-    <div class="btn btn-success">
+    <span class="btn btn-success">
         SLA <span class="badge badge-light">{{ stats.sla }}%</span>
-    </div>
+    </span>
 
-    </div>
+</div>
 
 </script>
 
