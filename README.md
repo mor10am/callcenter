@@ -1,5 +1,11 @@
 # Simple Asterisk callcenter with PHP and Vue.js
 
+## Deploy
+
+```
+$> ansible-playbook ansible/playbook.yml -i ansible/inventories/production
+```
+
 ## Server process and frontend
 
 ```
