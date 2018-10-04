@@ -37,6 +37,11 @@ final class Callcenter
     private $calls = [];
 
     /**
+     * @var \Callcenter\Model\Statistics
+     */
+    private $stats;
+
+    /**
      * Connections of agent and call
      * @var array
      */
@@ -79,7 +84,7 @@ final class Callcenter
     }
 
     /**
-     * @return false|string
+     * @return string
      */
     private function calcAndSerializeStats()
     {
@@ -408,12 +413,12 @@ final class Callcenter
         }
 
         /**
-         * @var \Callcenter\Model\Agent $agent
+         * @var \Callcenter\Model\Agent
          */
         $agent = $this->agents[$agentid];
 
         /**
-         * @var \Callcenter\Model\Call $call
+         * @var \Callcenter\Model\Call
          */
         $call = $this->calls[$calleruid];
 
