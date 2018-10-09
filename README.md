@@ -1,5 +1,7 @@
 # Simple Asterisk callcenter with PHP and Vue.js
 
+[Click here for slides from Astricon 2018 presentation (Slideshare)](https://www.slideshare.net/mor10am/simple-callcenter-platform-with-php)
+
 ## Deploy
 
 ```
